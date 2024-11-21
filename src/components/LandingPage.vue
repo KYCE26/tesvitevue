@@ -183,74 +183,74 @@
     padding: 0;
     box-sizing: border-box;
   }
-  
+
   h1, h2, h3 {
-    color: #3D5300;
+    color: #2c3e50; /* Dark blue-gray for the headings */
   }
-  
-.hero-section {
-  background: linear-gradient(135deg, #4caf50, #2196f3); /* Ubah gradasi agar lebih kontras */
-  color: white;
-  padding: 60px 20px;
-  text-align: center;
-}
+
+  .hero-section {
+    background: linear-gradient(135deg, #3498db, #f39c12); /* Blue to orange gradient */
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+  }
 
   .hero-content h1 {
     font-size: 3rem;
     margin-bottom: 1rem;
     animation: fadeIn 1s ease-out;
   }
-  
+
   .hero-content p {
     font-size: 1.2rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .cta-button {
     padding: 12px 30px;
-    background-color: #968a1f;
+    background-color: #e67e22; /* Orange button */
     color: white;
     text-decoration: none;
     font-weight: bold;
     border-radius: 5px;
     transition: background-color 0.3s ease, transform 0.2s ease;
   }
-  
+
   .cta-button:hover {
-    background-color: #ffc107;
+    background-color: #f39c12; /* Lighter orange on hover */
     transform: scale(1.1);
   }
-  
+
   .about-section {
     padding: 50px 20px;
-    background-color: #f4f4f4;
+    background-color: #ecf0f1; /* Light gray background */
     text-align: center;
   }
-  
+
   .about-cards {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     margin-top: 30px;
   }
-  
+
   .about-card {
     padding: 20px;
     background-color: white;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   }
-  
+
   .features-section {
     padding: 50px 20px;
   }
-  
+
   .features-list {
     display: flex;
     gap: 20px;
     justify-content: space-around;
   }
-  
+
   .feature-item {
     background-color: #ffffff;
     border-radius: 10px;
@@ -259,18 +259,18 @@
     text-align: center;
     flex: 1;
   }
-  
+
   .stats-section {
     padding: 50px 20px;
     background-color: #e9f7ef;
   }
-  
+
   .stats-cards {
     display: flex;
     justify-content: space-around;
     margin-top: 20px;
   }
-  
+
   .stat-card {
     background-color: white;
     border-radius: 10px;
@@ -278,37 +278,38 @@
     text-align: center;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   }
-  
+
   .contact-section {
     padding: 50px 20px;
     background-color: #f4f4f4;
   }
-  
+
   .contact-form {
     display: flex;
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .contact-form input, .contact-form textarea {
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 1rem;
   }
-  
+
   .contact-form button {
     padding: 12px 30px;
-    background-color: #00bcd4;
+    background-color: #00bcd4; /* Blue button */
     color: white;
     border-radius: 5px;
     font-weight: bold;
     transition: background-color 0.3s ease;
   }
-  
+
   .contact-form button:hover {
-    background-color: #0288d1;
+    background-color: #0288d1; /* Darker blue on hover */
   }
+
   
   @keyframes fadeIn {
     from {

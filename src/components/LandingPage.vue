@@ -2,16 +2,16 @@
     <div>
       <section class="hero-section">
         <div class="hero-content">
-          <h1>Selamat Datang di SIMAG</h1>
+          <h1>Selamat Datang di SIDIMAS</h1>
           <p>Membantu SD dan SMP di Bandung dengan informasi distribusi makan gratis dari pemerintah.</p>
           <router-link to="#tentang" class="cta-button">Pelajari Lebih Lanjut</router-link>
         </div>
       </section>
   
       <section id="tentang" class="about-section">
-        <h2>Tentang SIMAG</h2>
+        <h2>Tentang SIDIMAS</h2>
         <p>
-          Sistem Informasi Makan Gratis (SIMAG) dirancang untuk mengelola dan memonitor distribusi makanan gratis di
+          Sistem Informasi Makan Gratis (SIDIMAS) dirancang untuk mengelola dan memonitor distribusi makanan gratis di
           sekolah-sekolah dasar dan menengah di Bandung. Program ini bertujuan untuk memastikan keberlanjutan
           distribusi makanan dan menjamin akses yang adil bagi semua sekolah di kawasan ini.
         </p>
@@ -32,7 +32,7 @@
       </section>
   
       <section id="fitur" class="features-section">
-        <h2>Fitur SIMAG</h2>
+        <h2>Fitur SIDIMAS</h2>
         <div class="features-list">
           <div class="feature-item">
             <h3>Distribusi Makanan</h3>
@@ -51,7 +51,7 @@
   
       <section id="statistik" class="stats-section">
         <h2>Statistik Program</h2>
-        <p>Berikut adalah beberapa statistik terkait dengan distribusi makanan di program SIMAG yang telah berjalan:</p>
+        <p>Berikut adalah beberapa statistik terkait dengan distribusi makanan di program SIDIMAS yang telah berjalan:</p>
         <div class="stats-cards">
           <div class="stat-card">
             <h3>Jumlah Sekolah Terlibat</h3>

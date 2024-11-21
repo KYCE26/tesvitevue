@@ -1,31 +1,17 @@
-<template>
-  <div id="app">
-    <Navbar />
-    <LandingPage />
-  </div>
-</template>
+<script setup>
 
-<script>
-import Navbar from './components/Navbar.vue';
-import LandingPage from './components/LandingPage.vue';
+import Header from './layouts/Header.vue';
+import Main from './layouts/Main.vue';
+import Footer from './layouts/Footer.vue';
 
-export default {
-  name: 'App',
-  components: {
-    Navbar,
-    LandingPage
-  }
-};
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin: 0;
-  padding: 0;
-}
-</style>
+<template>
+    <Header/>
+
+    <Main/>
+
+    <Footer />
+</template>
+
+<style scoped></style>

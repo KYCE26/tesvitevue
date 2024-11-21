@@ -3,7 +3,7 @@
       <section class="hero-section">
         <div class="hero-content">
           <h1>Selamat Datang di SIMAG</h1>
-          <p>Membantu SD dan SMP di Bandung dengan informasi distribusi makan gratis dari pemerintah presiden.</p>
+          <p>Membantu SD dan SMP di Bandung dengan informasi distribusi makan gratis dari pemerintah.</p>
           <router-link to="#tentang" class="cta-button">Pelajari Lebih Lanjut</router-link>
         </div>
       </section>
@@ -185,7 +185,7 @@
   }
   
   h1, h2, h3 {
-    color: #4caf50;
+    color: #3D5300;
   }
   
 .hero-section {
@@ -208,7 +208,7 @@
   
   .cta-button {
     padding: 12px 30px;
-    background-color: #ffeb3b;
+    background-color: #968a1f;
     color: white;
     text-decoration: none;
     font-weight: bold;

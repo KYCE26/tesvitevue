@@ -6,18 +6,18 @@
         <div class="container mx-auto px-5">
             <div class="grid md:grid-cols-2">
                 <div class="flex flex-col md:flex-row md:space-x-12 items-center">
-                    <div class="mb-10 md:mb-0">
-                        <img src="/images/logo-bookmark-white.svg" alt="Logo" />
-                    </div>
+                    <div>
+                <h2 class="text-2xl xl:text-2xl font-bold font-theme-heading text-center text-white lg:text-left"><router-link to="/" v-smooth-scroll>SIDIMAS</router-link></h2>
+            </div>
                     <ul class="flex flex-col md:flex-row space-y-5 md:space-y-0 md:space-x-8 text-xs text-center md:text-left font-theme-heading">
                         <li class="uppercase text-white hover:text-theme-secondary transition duration-200">
-                            <a href="#features" v-smooth-scroll>Features</a>
+                            <a href="#features" v-smooth-scroll>Fitur</a>
                         </li>
                         <li class="uppercase text-white hover:text-theme-secondary transition duration-200">
                             <a href="#faq" v-smooth-scroll>FAQ</a>
                         </li>
                         <li class="uppercase text-white hover:text-theme-secondary transition duration-200">
-                            <a href="#download-section" v-smooth-scroll>Download</a>
+                            <a href="#download-section" v-smooth-scroll>Contact Us</a>
                         </li>
                     </ul>
                 </div>

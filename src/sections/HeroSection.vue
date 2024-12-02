@@ -8,8 +8,8 @@
                 <h1 class="text-4xl xl:text-5xl font-bold font-theme-heading text-center lg:text-left">Selamat Datang di SIDIMAS</h1>
                 <p class="lg:text-xl mt-10 font-theme-content text-theme-grayish-blue text-center lg:text-left">SIDIMAS / Sistem Informasi Distribusi Makan Gratis merupakan aplikasi yang dirancang khusus untuk memberikan informasi yang berkaitan dengan program makan siang gratis.</p>
                 <div class="flex justify-center lg:justify-start mt-10">
-                    <LinkButton btn-type="primary" link="#faq">Rincian</LinkButton>
-                    <LinkButton btn-type="muted" link="#download-section">Registrasi Supplier</LinkButton>
+                    <LinkButton btn-type="primary" link='#faq'>Rincian</LinkButton>
+                    <LinkButton btn-type="muted" :link="'/signup'" customClass="my-custom-class">Registrasi Supplier</LinkButton>
                 </div>
             </div>
             <div class="relative order-1 lg:order-none mb-20 lg:mt-0 lg:mb-0 lg:-mr-10">

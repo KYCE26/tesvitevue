@@ -1,6 +1,13 @@
 <script setup>
     import { ref } from 'vue';
+    import { useRouter } from 'vue-router'; // Import useRouter dari vue-router
 
+const router = useRouter(); // Mendapatkan instance router
+
+// Fungsi untuk mengarahkan ke halaman login
+const goToLogin = () => {
+  router.push('/login'); // Mengarahkan ke halaman login
+};
     let mobileNav = ref(false);
 
     let toggleMobileNav = () => {
@@ -14,7 +21,7 @@
         <header class="flex justify-between py-12 items-center">
             <div>
                 
-                <h1 class="text-4xl xl:text-5xl font-bold font-theme-heading text-center lg:text-left"><a href="/" v-smooth-scroll>SIDIMAS</a></h1>
+                <h1 class="text-4xl xl:text-5xl font-bold font-theme-heading text-center lg:text-left"><router-link to="/" v-smooth-scroll>SIDIMAS</router-link></h1>
             </div>
             
             <nav class="flex justify-end flex-col md:flex-row">
@@ -30,9 +37,13 @@
                     <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#features" v-smooth-scroll>Fitur</a></li>
                     <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#faq" v-smooth-scroll>About Us</a></li>
                     <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#download-section" v-smooth-scroll>Contact Us</a></li>
-                    <li class="uppercase bg-theme-secondary px-6 py-2 text-white rounded shadow-md hover:bg-white border-2 border-transparent hover:border-theme-secondary hover:text-theme-secondary cursor-pointer transition duration-200">
-                        <a href="#" v-smooth-scroll>Login</a>
-                    </li>
+                    <li 
+  @click.prevent="goToLogin" 
+  class="uppercase bg-theme-secondary px-6 py-2 text-white rounded shadow-md hover:bg-white border-2 border-transparent hover:border-theme-secondary hover:text-theme-secondary cursor-pointer transition duration-200"
+>
+  Login
+</li>
+
                 </ul>
             </nav>
         </header>
@@ -50,16 +61,16 @@
                 </div>
                 <ul class="uppercase text-white text-md tracking-widest items-center flex flex-col mt-14">
                     <li class="hover:text-theme-secondary transition duration-200 py-4 border-t border-b border-theme-grayish-blue w-full text-center">
-                        <a  @click="toggleMobileNav()" href="#features">Features</a>
+                        <a  @click="toggleMobileNav()" href="#features">Fitur</a>
                     </li>
                     <li class="hover:text-theme-secondary transition duration-200 py-4 border-b border-theme-grayish-blue w-full text-center">
-                        <a  @click="toggleMobileNav()" href="#faq">FAQ</a>
+                        <a  @click="toggleMobileNav()" href="#faq">About Us</a>
                     </li>
                     <li class="hover:text-theme-secondary transition duration-200 py-4 border-b border-theme-grayish-blue w-full text-center">
                         <a  @click="toggleMobileNav()" href="#subscribe">Subscribe</a>
                     </li>
                     <li class="bg-transparent border-2 rounded px-6 py-2 mt-6 w-full text-center cursor-pointer hover:text-theme-secondary transition duration-200">
-                        <a  @click="toggleMobileNav()" href="#download-section">Download</a>
+                        <a  @click="toggleMobileNav()" href="#download-section">Contact Us</a>
                     </li>
                 </ul>
                 <div class="flex justify-center items-end h-52">

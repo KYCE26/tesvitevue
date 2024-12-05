@@ -34,9 +34,11 @@ const goToLogin = () => {
 
                 <!-- Desktop Menu -->
                 <ul class="space-x-10 font-theme-heading font-medium items-center hidden md:flex  flex-col space-y-7 md:space-y-0 md:flex-row">
-                    <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#features" v-smooth-scroll>Fitur</a></li>
-                    <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#faq" v-smooth-scroll>About Us</a></li>
-                    <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#download-section" v-smooth-scroll>Contact Us</a></li>
+                    <li class="uppercase hover:text-theme-secondary transition duration-200">
+  <router-link to="/profile-supplier">Supplier</router-link>
+</li>
+                    <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#faq" v-smooth-scroll>Makanan</a></li>
+                    <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#download-section" v-smooth-scroll>Distribusi</a></li>
                     <li 
   @click.prevent="goToLogin" 
   class="uppercase bg-theme-secondary px-6 py-2 text-white rounded shadow-md hover:bg-white border-2 border-transparent hover:border-theme-secondary hover:text-theme-secondary cursor-pointer transition duration-200"

@@ -6,7 +6,7 @@ const features = [
             imageUrl: "images/Warehouseworkersusinglaptop.jpg",
             title: "Kelola Supplier Makanan dengan Mudah",
             description: "Pantau dan atur supplier makanan untuk memastikan kualitas dan kuantitas makanan yang diberikan sesuai dengan kebutuhan.",
-            link: "#",
+            link: "/profile-supplier",
         },
     },
     {

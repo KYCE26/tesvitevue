@@ -1,28 +1,18 @@
-<template>
-  <div>
-    <!-- Menampilkan Header dan Footer hanya jika tidak di halaman login -->
-    <Header v-if="showHeaderFooter" />
-    
-    <router-view />
-    
-    <Footer v-if="showHeaderFooter" />
-  </div>
-</template>
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-<script>
-import Header from './layouts/Header.vue';
-import Footer from './layouts/Footer.vue';
+const defaultLayout = 'default'
 
-export default {
-  components: {
-    Header,
-    Footer,
-  },
-  computed: {
-    showHeaderFooter() {
-      // Cek apakah rute yang sedang aktif bukan rute login
-      return this.$route.path !== '';
-    },
-  },
-};
+const { currentRoute } = useRouter()
+
+const layout = computed(
+  () => `${currentRoute.value.meta.layout || defaultLayout}-layout`,
+)
 </script>
+
+<template>
+  <component :is="layout">
+    <router-view />
+  </component>
+</template>

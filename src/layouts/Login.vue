@@ -53,7 +53,7 @@
                     <label for="remember" class="text-gray-500 dark:text-gray-300">Remember me</label>
                   </div>
                 </div>
-                <router-link to="/forgot-password" class="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Forgot password?</router-link>
+                <router-link to="/dashboard" class="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Forgot password?</router-link>
               </div>
               <button type="submit" class="w-full text-white bg-theme-primary hover:bg-theme-primary-light focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-theme-primary dark:hover:bg-theme-primary-light dark:focus:ring-primary-800">
                 Sign in

@@ -6,6 +6,8 @@ import Dashboard from '../layouts/Dashboard.vue';
 import Tables from '../layouts/Tables.vue';
 import Profile from '../layouts/Profile.vue';
 import Supplier from '../layouts/Supplier.vue';
+import Makanan from '../sections/MakananSection.vue';
+import TableMakanan from '../layouts/Table-Makanan.vue';
 
 
 const routes = [
@@ -46,6 +48,12 @@ const routes = [
     path: '/profile-supplier',
     name: 'Supplier',
     component: Supplier,
+    meta: { layout: 'empty' },
+  },
+  {
+    path: '/table-makanan',
+    name: 'Table-Makanan',
+    component: TableMakanan,
     meta: { layout: 'empty' },
   },
   // tambahkan rute lainnya

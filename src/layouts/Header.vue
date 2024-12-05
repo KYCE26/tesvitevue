@@ -37,7 +37,9 @@ const goToLogin = () => {
                     <li class="uppercase hover:text-theme-secondary transition duration-200">
   <router-link to="/profile-supplier">Supplier</router-link>
 </li>
-                    <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#faq" v-smooth-scroll>Makanan</a></li>
+<li class="uppercase hover:text-theme-secondary transition duration-200">
+  <router-link to="/table-makanan">Makanan</router-link>
+</li>
                     <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#download-section" v-smooth-scroll>Distribusi</a></li>
                     <li 
   @click.prevent="goToLogin" 

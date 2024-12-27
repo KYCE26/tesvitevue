@@ -126,13 +126,13 @@ const inactiveClass = ref(
             />
           </svg>
 
-          <span class="mx-4">Tables</span>
+          <span class="mx-4">Bahan Mentah</span>
         </router-link>
 
         <router-link
           class="flex items-center px-6 py-2 mt-4 duration-200 border-l-4"
-          :class="[$route.name === 'Forms' ? activeClass : inactiveClass]"
-          to="/forms"
+          :class="[$route.name === 'produkjadi' ? activeClass : inactiveClass]"
+          to="/produkjadi"
         >
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path

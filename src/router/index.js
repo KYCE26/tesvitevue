@@ -8,6 +8,7 @@ import Profile from '../layouts/Profile.vue';
 import Supplier from '../layouts/Supplier.vue';
 import Makanan from '../sections/MakananSection.vue';
 import TableMakanan from '../layouts/Table-Makanan.vue';
+import Produkjadi from '../layouts/produkjadi.vue';
 
 
 const routes = [
@@ -55,6 +56,11 @@ const routes = [
     name: 'Table-Makanan',
     component: TableMakanan,
     meta: { layout: 'empty' },
+  },
+  {
+    path: '/produkjadi',
+    name: 'ProdukJadi',
+    component: Produkjadi,
   },
   // tambahkan rute lainnya
 ];

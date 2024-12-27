@@ -17,6 +17,8 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
               <th class="px-6 py-4 border-b">Bahan Mentah</th>
               <th class="px-6 py-4 border-b">Jumlah</th>
               <th class="px-6 py-4 border-b">Sumber</th>
+              <th class="px-6 py-4 border-b">Kategori</th>
+              <th class="px-6 py-4 border-b">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -25,6 +27,8 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
               <td class="px-6 py-4 border-b">{{ material.material }}</td>
               <td class="px-6 py-4 border-b">{{ material.amount }}</td>
               <td class="px-6 py-4 border-b">{{ material.source }}</td>
+              <td class="px-6 py-4 border-b">{{ material.category }}</td>
+              <td class="px-6 py-4 border-b">{{ material.status }}</td>
             </tr>
           </tbody>
         </table>
@@ -40,12 +44,16 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
             <tr>
               <th class="px-6 py-4 border-b">Produk</th>
               <th class="px-6 py-4 border-b">Bahan Mentah</th>
+              <th class="px-6 py-4 border-b">Kategori</th>
+              <th class="px-6 py-4 border-b">Status</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="product in finishedProducts" :key="product.id" class="hover:bg-theme-light-gray">
               <td class="px-6 py-4 border-b">{{ product.product }}</td>
               <td class="px-6 py-4 border-b">{{ product.ingredients.join(', ') }}</td>
+              <td class="px-6 py-4 border-b">{{ product.category }}</td>
+              <td class="px-6 py-4 border-b">{{ product.status }}</td>
             </tr>
           </tbody>
         </table>

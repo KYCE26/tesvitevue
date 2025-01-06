@@ -19,6 +19,7 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
               <th class="px-6 py-4 border-b">Sumber</th>
               <th class="px-6 py-4 border-b">Kategori</th>
               <th class="px-6 py-4 border-b">Status</th>
+              <th class="px-6 py-4 border-b">Tanggal</th>
             </tr>
           </thead>
           <tbody>
@@ -29,6 +30,7 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
               <td class="px-6 py-4 border-b">{{ material.source }}</td>
               <td class="px-6 py-4 border-b">{{ material.category }}</td>
               <td class="px-6 py-4 border-b">{{ material.status }}</td>
+              <td class="px-6 py-4 border-b">{{ material.date }}</td>
             </tr>
           </tbody>
         </table>
@@ -46,6 +48,7 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
               <th class="px-6 py-4 border-b">Bahan Mentah</th>
               <th class="px-6 py-4 border-b">Kategori</th>
               <th class="px-6 py-4 border-b">Status</th>
+              <th class="px-6 py-4 border-b">Tanggal</th>
             </tr>
           </thead>
           <tbody>
@@ -54,6 +57,7 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
               <td class="px-6 py-4 border-b">{{ product.ingredients.join(', ') }}</td>
               <td class="px-6 py-4 border-b">{{ product.category }}</td>
               <td class="px-6 py-4 border-b">{{ product.status }}</td>
+              <td class="px-6 py-4 border-b">{{ product.date }}</td>
             </tr>
           </tbody>
         </table>
@@ -61,6 +65,7 @@ import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data ba
     </div>
   </div>
 </template>
+
 
 <style scoped>
   /* Custom Theme Colors */

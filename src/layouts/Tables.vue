@@ -10,15 +10,20 @@ interface RawMaterial {
   source: string;
   category: string;
   status: string;
+  date: string; // Menambahkan atribut date
 }
 
-const rawMaterialList = ref<RawMaterial[]>(rawMaterials);
+const rawMaterialList = ref<RawMaterial[]>(
+  rawMaterials.map((material) => ({
+    ...material// Menambahkan tanggal ke setiap bahan mentah
+  }))
+);
 
 const isEditModalOpen = ref(false);
 const selectedRawMaterial = ref<RawMaterial | null>(null);
 
-const categories = ['Makanan Pokok', 'Lauk', 'Minuman', 'Sayuran'];  // List of categories
-const statuses = ['Tersedia', 'Habis'];   // List of statuses
+const categories = ['Makanan Pokok', 'Lauk', 'Minuman', 'Sayuran']; // List of categories
+const statuses = ['Tersedia', 'Habis']; // List of statuses
 
 function openEditRawModal(material: RawMaterial) {
   selectedRawMaterial.value = { ...material };
@@ -59,6 +64,7 @@ function closeEditRawModal() {
             <th class="px-6 py-3 border">Source</th>
             <th class="px-6 py-3 border">Category</th>
             <th class="px-6 py-3 border">Status</th>
+            <th class="px-6 py-3 border">Date</th> <!-- Kolom untuk tanggal -->
             <th class="px-6 py-3 border">Actions</th>
           </tr>
         </thead>
@@ -74,6 +80,7 @@ function closeEditRawModal() {
             <td class="px-6 py-4 border">{{ material.source }}</td>
             <td class="px-6 py-4 border">{{ material.category }}</td>
             <td class="px-6 py-4 border">{{ material.status }}</td>
+            <td class="px-6 py-4 border">{{ material.date }}</td> <!-- Menampilkan tanggal -->
             <td class="px-6 py-4 border">
               <button
                 @click="openEditRawModal(material)"

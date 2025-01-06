@@ -1,144 +1,115 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { finishedProducts } from '../data/makanan.js';
+import Swal from 'sweetalert2';
 
 interface FinishedProduct {
   id: number;
   product: string;
   ingredients: string[];
-  category: string;  // New field for category
-  status: string;    // New field for status
+  category: string; // Field untuk kategori
+  status: string;   // Field untuk status
+  date: string;     // Field untuk tanggal
 }
 
 const finishedProductList = ref<FinishedProduct[]>(finishedProducts);
 
-const isProductModalOpen = ref(false);
-const selectedFinishedProduct = ref<FinishedProduct | null>(null);
-
-const categories = ['Makanan Pokok', 'Lauk', 'Minuman', 'Sayuran'];  // List of categories
-const statuses = ['Tersedia', 'Habis'];   // List of statuses
-
-function openEditProductModal(product: FinishedProduct) {
-  selectedFinishedProduct.value = { ...product };
-  isProductModalOpen.value = true;
-}
-
-function saveProductChanges() {
-  if (selectedFinishedProduct.value) {
-    const index = finishedProductList.value.findIndex(
-      (p) => p.id === selectedFinishedProduct.value!.id
-    );
-    if (index !== -1) {
-      finishedProductList.value[index] = { ...selectedFinishedProduct.value };
+const showDetails = (product: FinishedProduct) => {
+  Swal.fire({
+    title: product.product,
+    html: `
+      <div class='text-left'>
+        <p><strong>Ingredients:</strong> ${product.ingredients.join(', ')}</p>
+        <p><strong>Category:</strong> ${product.category}</p>
+        <p><strong>Status:</strong> ${product.status}</p>
+        <p><strong>Date:</strong> ${product.date}</p>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Edit',
+    cancelButtonText: 'Close',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      editProduct(product);
     }
-    closeEditProductModal();
-  }
-}
+  });
+};
 
-function closeEditProductModal() {
-  isProductModalOpen.value = false;
-  selectedFinishedProduct.value = null;
-}
+const editProduct = (product: FinishedProduct) => {
+  Swal.fire({
+    title: `Edit Product: ${product.product}`,
+    html: `
+      <div class='text-left' >
+        <div class='mb-4'>
+          <label class='block text-sm font-medium text-gray-700'>Product Name</label>
+          <input id='product-name' type='text' class='swal2-input' value='${product.product}' />
+        </div>
+
+        <div class='mb-4'>
+          <label class='block text-sm font-medium text-gray-700'>Ingredients</label>
+          <input id='product-ingredients' type='text' class='swal2-input' value='${product.ingredients.join(', ')}' />
+        </div>
+
+        <div class='mb-4'>
+          <label class='block text-sm font-medium text-gray-700'>Category</label>
+          <input id='product-category' type='text' class='swal2-input' value='${product.category}' />
+        </div>
+        <div class='mb-4'>
+          <label class='block text-sm font-medium text-gray-700'>Date</label>
+          <input id='product-date' type='date' class='swal2-input' value='${product.date}' />
+        </div>
+        <div class='mb-4'>
+          <label class='block text-sm font-medium text-gray-700'>Status</label>
+          <select id='product-status' class='swal2-select'>
+            <option value='Tersedia' ${product.status === 'Tersedia' ? 'selected' : ''}>Tersedia</option>
+            <option value='Habis' ${product.status === 'Habis' ? 'selected' : ''}>Habis</option>
+          </select>
+        </div>
+
+
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Save',
+    cancelButtonText: 'Cancel',
+    preConfirm: () => {
+      const name = (document.getElementById('product-name') as HTMLInputElement).value;
+      const ingredients = (document.getElementById('product-ingredients') as HTMLInputElement).value.split(',').map(i => i.trim());
+      const category = (document.getElementById('product-category') as HTMLInputElement).value;
+      const status = (document.getElementById('product-status') as HTMLSelectElement).value;
+      const date = (document.getElementById('product-date') as HTMLInputElement).value;
+
+      return { name, ingredients, category, status, date };
+    },
+  }).then((result) => {
+    if (result.isConfirmed && result.value) {
+      const { name, ingredients, category, status, date } = result.value;
+      product.product = name;
+      product.ingredients = ingredients;
+      product.category = category;
+      product.status = status;
+      product.date = date;
+
+      Swal.fire('Saved!', 'Product updated successfully.', 'success');
+    }
+  });
+};
+
 </script>
 
 <template>
-  <div>
-    <h3 class="text-3xl font-medium text-gray-700">Dashboard Supply</h3>
-
-    <!-- Table for Finished Products -->
-    <h4 class="mt-8 text-xl font-medium text-gray-600">Finished Products</h4>
-    <div class="mt-4">
-      <table class="min-w-full border">
-        <thead>
-          <tr class="bg-gray-50">
-            <th class="px-6 py-3 border">Product</th>
-            <th class="px-6 py-3 border">Ingredients</th>
-            <th class="px-6 py-3 border">Category</th>
-            <th class="px-6 py-3 border">Status</th>
-            <th class="px-6 py-3 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="product in finishedProductList"
-            :key="product.id"
-            class="bg-white"
-          >
-            <td class="px-6 py-4 border">{{ product.product }}</td>
-            <td class="px-6 py-4 border">
-              <ul>
-                <li v-for="ingredient in product.ingredients" :key="ingredient">
-                  {{ ingredient }}
-                </li>
-              </ul>
-            </td>
-            <td class="px-6 py-4 border">{{ product.category }}</td>
-            <td class="px-6 py-4 border">{{ product.status }}</td>
-            <td class="px-6 py-4 border">
-              <button
-                @click="openEditProductModal(product)"
-                class="px-4 py-2 text-white bg-blue-500 rounded"
-              >
-                Edit
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Edit Modal for Finished Products -->
-    <div
-      v-if="isProductModalOpen"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div class="w-1/3 p-6 bg-white rounded shadow">
-        <h2 class="mb-4 text-lg font-medium text-gray-700">Edit Finished Product</h2>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Product</label>
-          <input
-            v-model="selectedFinishedProduct.product"
-            type="text"
-            class="w-full px-3 py-2 border rounded"
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Ingredients</label>
-          <textarea
-            v-model="selectedFinishedProduct.ingredients"
-            class="w-full px-3 py-2 border rounded"
-          ></textarea>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Category</label>
-          <select
-            v-model="selectedFinishedProduct.category"
-            class="w-full px-3 py-2 border rounded"
-          >
-            <option v-for="category in categories" :key="category" :value="category">
-              {{ category }}
-            </option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Status</label>
-          <select
-            v-model="selectedFinishedProduct.status"
-            class="w-full px-3 py-2 border rounded"
-          >
-            <option v-for="status in statuses" :key="status" :value="status">
-              {{ status }}
-            </option>
-          </select>
-        </div>
-        <div class="flex justify-end space-x-4">
-          <button @click="closeEditProductModal" class="px-4 py-2 bg-gray-300 rounded">
-            Cancel
-          </button>
-          <button @click="saveProductChanges" class="px-4 py-2 text-white bg-blue-500 rounded">
-            Save
-          </button>
-        </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-for="product in finishedProductList" :key="product.id" class="bg-white shadow-md rounded-lg p-4">
+      <h3 class="text-lg font-bold">{{ product.product }}</h3>
+      <p class="text-sm text-gray-600">Category: {{ product.category }}</p>
+      <p class="text-sm text-gray-600">Status: {{ product.status }}</p>
+      <div class="mt-4 flex justify-between">
+        <button @click="showDetails(product)" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          Detail
+        </button>
+        <button @click="() => editProduct(product)" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+          Edit
+        </button>
       </div>
     </div>
   </div>

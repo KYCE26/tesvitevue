@@ -5,8 +5,9 @@ const rawMaterials = [
     material: "Beras",
     amount: "100 kg",
     source: "Bandung",
-    category: "Makanan Pokok",  // Kategori
-    status: "Tersedia"  // Status
+    category: "Makanan Pokok",
+    status: "Tersedia",
+    date: "2024-12-27"
   },
   {
     id: 2,
@@ -14,8 +15,9 @@ const rawMaterials = [
     material: "Sayur Mayur",
     amount: "50 kg",
     source: "Bandung Barat",
-    category: "Sayuran",  // Kategori
-    status: "Habis"  // Status
+    category: "Sayuran",
+    status: "Habis",
+    date: "2024-12-26"
   },
   {
     id: 3,
@@ -23,8 +25,9 @@ const rawMaterials = [
     material: "Ayam",
     amount: "200 kg",
     source: "Sukasari",
-    category: "Lauk",  // Kategori
-    status: "Tersedia"  // Status
+    category: "Lauk",
+    status: "Tersedia",
+    date: "2024-12-25"
   }
 ];
 
@@ -37,8 +40,9 @@ const finishedProducts = [
       "Ayam",
       "Sayur Mayur"
     ],
-    category: "Makanan Pokok",  // Kategori
-    status: "Tersedia"  // Status
+    category: "Makanan Pokok",
+    status: "Tersedia",
+    date: "2024-12-27"
   },
   {
     id: 2,
@@ -48,8 +52,9 @@ const finishedProducts = [
       "Ayam",
       "Sayur Mayur"
     ],
-    category: "Lauk",  // Kategori
-    status: "Tersedia"  // Status
+    category: "Lauk",
+    status: "Tersedia",
+    date: "2024-12-26"
   },
   {
     id: 3,
@@ -59,8 +64,9 @@ const finishedProducts = [
       "Bumbu Soto",
       "Sayur Mayur"
     ],
-    category: "Makanan Pokok",  // Kategori
-    status: "Tersedia"  // Status
+    category: "Makanan Pokok",
+    status: "Tersedia",
+    date: "2024-12-25"
   }
 ];
 

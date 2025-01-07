@@ -9,6 +9,7 @@ import Supplier from '../layouts/Supplier.vue';
 import Makanan from '../sections/MakananSection.vue';
 import TableMakanan from '../layouts/Table-Makanan.vue';
 import Produkjadi from '../layouts/produkjadi.vue';
+import Cards from '../layouts/cards.vue';
 
 
 const routes = [
@@ -61,6 +62,11 @@ const routes = [
     path: '/produkjadi',
     name: 'ProdukJadi',
     component: Produkjadi,
+  },
+  {
+    path: '/cards',
+    name: 'Cards',
+    component: Cards,
   },
   // tambahkan rute lainnya
 ];

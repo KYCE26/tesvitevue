@@ -12,73 +12,124 @@ interface Distribusi {
 }
 
 const distribusiList = ref<Distribusi[]>(distribusiData);
-const selectedDistribusi = ref<Distribusi | null>(null);
-const isEditMode = ref(false);
 
-// Buka modal detail
+// Fungsi untuk menampilkan detail menggunakan SweetAlert
 function openDetailModal(distribusi: Distribusi) {
-  selectedDistribusi.value = { ...distribusi };
-  isEditMode.value = false;
   Swal.fire({
-    title: "Detail Distribusi",
+    title: 'Detail Distribusi',
     html: `
       <div class="text-left">
-        <p><strong>Menu:</strong> ${selectedDistribusi.value?.menu}</p>
-        <p><strong>Stok:</strong> ${selectedDistribusi.value?.stok}</p>
-        <p><strong>Sekolah:</strong> ${selectedDistribusi.value?.sekolah}</p>
-        <p><strong>Tanggal:</strong> ${selectedDistribusi.value?.tanggal}</p>
+        <p><strong>Menu:</strong> ${distribusi.menu}</p>
+        <p><strong>Stok:</strong> ${distribusi.stok}</p>
+        <p><strong>Sekolah:</strong> ${distribusi.sekolah}</p>
+        <p><strong>Tanggal:</strong> ${distribusi.tanggal}</p>
       </div>
     `,
     showCancelButton: true,
-    confirmButtonText: "Edit",
-    cancelButtonText: "Close",
+    cancelButtonText: 'Close',
+    confirmButtonText: 'Edit',
   }).then((result) => {
     if (result.isConfirmed) {
-      openEditModal(selectedDistribusi.value as Distribusi);
+      openEditModal(distribusi);
     }
   });
 }
 
-// Buka modal edit
+// Fungsi untuk membuka modal edit
 function openEditModal(distribusi: Distribusi) {
-  selectedDistribusi.value = { ...distribusi };
-  isEditMode.value = true;
   Swal.fire({
-    title: "Edit Distribusi",
+    title: 'Edit Distribusi',
     html: `
       <div class="text-left">
         <label class="block text-sm font-medium text-gray-700">Menu</label>
-        <input id="menu" type="text" value="${selectedDistribusi.value?.menu}" class="swal2-input">
+        <input id="menu" type="text" value="${distribusi.menu}" class="swal2-input">
         
         <label class="block text-sm font-medium text-gray-700">Stok</label>
-        <input id="stok" type="number" value="${selectedDistribusi.value?.stok}" class="swal2-input">
+        <input id="stok" type="number" value="${distribusi.stok}" class="swal2-input">
         
         <label class="block text-sm font-medium text-gray-700">Sekolah</label>
-        <input id="sekolah" type="text" value="${selectedDistribusi.value?.sekolah}" class="swal2-input">
+        <input id="sekolah" type="text" value="${distribusi.sekolah}" class="swal2-input">
         
         <label class="block text-sm font-medium text-gray-700">Tanggal</label>
-        <input id="tanggal" type="date" value="${selectedDistribusi.value?.tanggal}" class="swal2-input">
+        <input id="tanggal" type="date" value="${distribusi.tanggal}" class="swal2-input">
       </div>
     `,
     showCancelButton: true,
-    confirmButtonText: "Save",
-    cancelButtonText: "Cancel",
+    confirmButtonText: 'Save',
+    cancelButtonText: 'Cancel',
     preConfirm: () => {
-      const menu = (document.getElementById("menu") as HTMLInputElement).value;
-      const stok = parseInt((document.getElementById("stok") as HTMLInputElement).value, 10);
-      const sekolah = (document.getElementById("sekolah") as HTMLInputElement).value;
-      const tanggal = (document.getElementById("tanggal") as HTMLInputElement).value;
+      const menu = (document.getElementById('menu') as HTMLInputElement).value;
+      const stok = parseInt((document.getElementById('stok') as HTMLInputElement).value, 10);
+      const sekolah = (document.getElementById('sekolah') as HTMLInputElement).value;
+      const tanggal = (document.getElementById('tanggal') as HTMLInputElement).value;
 
       return { menu, stok, sekolah, tanggal };
     },
   }).then((result) => {
-    if (result.isConfirmed && selectedDistribusi.value) {
-      const { menu, stok, sekolah, tanggal } = result.value;
-      const index = distribusiList.value.findIndex((item) => item.id === selectedDistribusi.value?.id);
+    if (result.isConfirmed) {
+      const index = distribusiList.value.findIndex((item) => item.id === distribusi.id);
       if (index !== -1) {
-        distribusiList.value[index] = { ...selectedDistribusi.value, menu, stok, sekolah, tanggal };
-        Swal.fire("Saved!", "Distribusi berhasil diperbarui.", "success");
+        distribusiList.value[index] = { ...distribusi, ...result.value };
+        Swal.fire('Saved!', 'Distribusi berhasil diperbarui.', 'success');
       }
+    }
+  });
+}
+
+// Fungsi untuk membuka modal tambah data
+function openCreateModal() {
+  Swal.fire({
+    title: 'Tambah Distribusi',
+    html: `
+      <div class="text-left">
+        <label class="block text-sm font-medium text-gray-700">Menu</label>
+        <input id="menu" type="text" class="swal2-input">
+        
+        <label class="block text-sm font-medium text-gray-700">Stok</label>
+        <input id="stok" type="number" class="swal2-input">
+        
+        <label class="block text-sm font-medium text-gray-700">Sekolah</label>
+        <input id="sekolah" type="text" class="swal2-input">
+        
+        <label class="block text-sm font-medium text-gray-700">Tanggal</label>
+        <input id="tanggal" type="date" class="swal2-input">
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Add',
+    cancelButtonText: 'Cancel',
+    preConfirm: () => {
+      const menu = (document.getElementById('menu') as HTMLInputElement).value;
+      const stok = parseInt((document.getElementById('stok') as HTMLInputElement).value, 10);
+      const sekolah = (document.getElementById('sekolah') as HTMLInputElement).value;
+      const tanggal = (document.getElementById('tanggal') as HTMLInputElement).value;
+
+      return { menu, stok, sekolah, tanggal };
+    },
+  }).then((result) => {
+    if (result.isConfirmed) {
+      distribusiList.value.push({
+        id: distribusiList.value.length + 1,
+        ...result.value,
+      });
+      Swal.fire('Added!', 'Distribusi berhasil ditambahkan.', 'success');
+    }
+  });
+}
+
+// Fungsi untuk menghapus data
+function deleteDistribusi(distribusi: Distribusi) {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      distribusiList.value = distribusiList.value.filter((item) => item.id !== distribusi.id);
+      Swal.fire('Deleted!', 'Distribusi berhasil dihapus.', 'success');
     }
   });
 }
@@ -87,6 +138,14 @@ function openEditModal(distribusi: Distribusi) {
 <template>
   <div>
     <h3 class="text-2xl font-medium text-gray-700 mb-4">Distribusi Menu</h3>
+    <div class="mb-4 text-right">
+      <button
+        @click="openCreateModal"
+        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        + Add Distribusi
+      </button>
+    </div>
     <div class="overflow-x-auto">
       <table class="min-w-full bg-white border border-gray-200 shadow rounded-lg">
         <thead>
@@ -108,12 +167,18 @@ function openEditModal(distribusi: Distribusi) {
             <td class="px-6 py-4 text-sm text-gray-700">{{ item.stok }}</td>
             <td class="px-6 py-4 text-sm text-gray-700">{{ item.sekolah }}</td>
             <td class="px-6 py-4 text-sm text-gray-700">{{ item.tanggal }}</td>
-            <td class="px-6 py-4 text-sm text-gray-700">
+            <td class="px-6 py-4 text-sm text-gray-700 flex space-x-2">
               <button
                 @click="openDetailModal(item)"
-                class="px-4 py-2 text-white bg-blue-500 rounded"
+                class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
               >
                 Detail
+              </button>
+              <button
+                @click="deleteDistribusi(item)"
+                class="px-4 py-2 text-white bg-red-500 rounded hover:bg-red-600"
+              >
+                Delete
               </button>
             </td>
           </tr>

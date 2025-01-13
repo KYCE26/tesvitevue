@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import Swal from 'sweetalert2';
 import suppliers from '../data/supplier.js';
 
 interface Supplier {
@@ -8,179 +9,179 @@ interface Supplier {
   address: string;
   contact: string;
   certifications: string;
-  details: {
-    picture: string | null;
-  };
+  verified: boolean;
+  picture: string | null;
 }
 
-const suppliersData = ref<Supplier[]>(suppliers); // Menyimpan data supplier dalam reactive variable
+// Ambil data user dari localStorage
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+const isAdmin = user.role === 'admin'; // Cek apakah user adalah admin
+const suppliersData = ref<Supplier[]>(suppliers);
 
-const editModalOpen = ref(false);
-const selectedSupplier = ref<Supplier | null>(null);
-const imagePreview = ref<string | null>(null);
+// Computed untuk menampilkan data sesuai role
+const filteredSuppliers = computed(() => {
+  if (isAdmin) {
+    // Admin dapat melihat semua data
+    return suppliersData.value;
+  } else {
+    // Supplier hanya dapat melihat data miliknya
+    return suppliersData.value.filter((supplier) => supplier.id === user.id);
+  }
+});
 
-// Function untuk membuka modal edit
-const openEditModal = (supplier: Supplier) => {
-  selectedSupplier.value = { ...supplier };
-  imagePreview.value = supplier.details.picture; // Set image preview from existing data
-  editModalOpen.value = true;
+// Fungsi detail modal (akses untuk semua user)
+const showDetailModal = (supplier: Supplier) => {
+  Swal.fire({
+    title: `${supplier.name}`,
+    html: `
+      <div class="text-left">
+        <p><strong>Address:</strong> ${supplier.address}</p>
+        <p><strong>Contact:</strong> ${supplier.contact}</p>
+        <p><strong>Certifications:</strong> ${supplier.certifications}</p>
+        <p><strong>Verified:</strong> ${supplier.verified ? 'Yes' : 'No'}</p>
+      </div>
+    `,
+    confirmButtonText: 'Close',
+  });
 };
 
-// Function untuk menangani upload gambar
-const handleImageUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input && input.files?.length) {
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      imagePreview.value = e.target?.result as string;
-      if (selectedSupplier.value) {
-        selectedSupplier.value.details.picture = imagePreview.value;
+// CRUD functions hanya untuk admin atau supplier miliknya
+const openEditModal = (supplier: Supplier | null = null) => {
+  const isEdit = !!supplier;
+  const defaultData = supplier || {
+    id: user.id,
+    name: '',
+    address: '',
+    contact: '',
+    certifications: '',
+    verified: false,
+    picture: null,
+  };
+
+  Swal.fire({
+    title: isEdit ? 'Edit Supplier' : 'Add Supplier',
+    html: `
+      <label>Name</label>
+      <input id="name" value="${defaultData.name}" class="swal2-input" />
+      <label>Address</label>
+      <input id="address" value="${defaultData.address}" class="swal2-input" />
+      <label>Contact</label>
+      <input id="contact" value="${defaultData.contact}" class="swal2-input" />
+      <label>Certifications</label>
+      <input id="certifications" value="${defaultData.certifications}" class="swal2-input" />
+    `,
+    showCancelButton: true,
+    confirmButtonText: isEdit ? 'Save' : 'Add',
+    preConfirm: () => ({
+      name: (document.getElementById('name') as HTMLInputElement).value,
+      address: (document.getElementById('address') as HTMLInputElement).value,
+      contact: (document.getElementById('contact') as HTMLInputElement).value,
+      certifications: (document.getElementById('certifications') as HTMLInputElement).value,
+    }),
+  }).then((result) => {
+    if (result.isConfirmed) {
+      if (isEdit) {
+        const index = suppliersData.value.findIndex((s) => s.id === supplier?.id);
+        if (index !== -1) {
+          suppliersData.value[index] = { ...suppliersData.value[index], ...result.value };
+          Swal.fire('Saved!', 'Supplier updated successfully.', 'success');
+        }
+      } else {
+        // Batasi supplier hanya dapat membuat data sekali
+        const supplierExists = suppliersData.value.some((s) => s.id === user.id);
+        if (supplierExists) {
+          Swal.fire('Error', 'You can only create one supplier profile.', 'error');
+        } else {
+          suppliersData.value.push({ id: defaultData.id, ...result.value });
+          Swal.fire('Added!', 'New supplier added successfully.', 'success');
+        }
       }
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-// Function untuk menyimpan perubahan
-const saveChanges = () => {
-  if (selectedSupplier.value) {
-    const index = suppliersData.value.findIndex(s => s.id === selectedSupplier.value.id);
-    if (index !== -1) {
-      suppliersData.value[index] = { ...selectedSupplier.value }; // Update data supplier
     }
-  }
-  editModalOpen.value = false; // Close modal after save
+  });
 };
 
-// Function untuk menutup modal
-const closeModal = () => {
-  editModalOpen.value = false; // Close modal without saving
+// Delete supplier (Hanya untuk admin)
+const deleteSupplier = (supplier: Supplier) => {
+  if (!isAdmin) return; // Batasi akses
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete it!',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      suppliersData.value = suppliersData.value.filter((s) => s.id !== supplier.id);
+      Swal.fire('Deleted!', 'Supplier deleted.', 'success');
+    }
+  });
 };
 </script>
 
 <template>
   <div>
-    <h3 class="text-3xl font-medium text-gray-700">
-      Supplier Profiles
-    </h3>
+    <h3 class="text-3xl font-medium text-gray-700">Supplier Profiles</h3>
 
-    <div class="mt-8">
-      <h4 class="text-gray-600">
-        Supplier List
-      </h4>
-
-      <div class="mt-6">
-        <div class="px-4 py-4 -mx-4 overflow-x-auto sm:-mx-8 sm:px-8">
-          <div class="inline-block min-w-full overflow-hidden rounded-lg shadow">
-            <table class="min-w-full leading-normal">
-              <thead>
-                <tr>
-                  <th
-                    class="px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200"
-                  >
-                    Name
-                  </th>
-                  <th
-                    class="px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200"
-                  >
-                    Address
-                  </th>
-                  <th
-                    class="px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200"
-                  >
-                    Contact
-                  </th>
-                  <th
-                    class="px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200"
-                  >
-                    Certifications
-                  </th>
-                  <th
-                    class="px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200"
-                  >
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="supplier in suppliersData" :key="supplier.id">
-  <td class="px-5 py-5">{{ supplier.name }}</td>
-  <td class="px-5 py-5">{{ supplier.details.address }}</td> <!-- Mengakses address dari details -->
-  <td class="px-5 py-5">{{ supplier.details.contact }}</td> <!-- Mengakses contact dari details -->
-  <td class="px-5 py-5">{{ supplier.details.certifications.join(', ') }}</td> <!-- Mengakses certifications dari details dan menggabungkannya -->
-  <td class="px-5 py-5">
-    <button
-      @click="openEditModal(supplier)"
-      class="px-4 py-2 text-white bg-blue-500 rounded"
-    >
-      Edit
-    </button>
-  </td>
-</tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+    <!-- Add Supplier Button -->
+    <div v-if="isAdmin || !suppliersData.some(s => s.id === user.id)" class="mt-4">
+      <button @click="openEditModal(null)" class="px-4 py-2 text-white bg-green-500 rounded">
+        Add Supplier
+      </button>
     </div>
 
-    <!-- Modal Edit Supplier -->
-    <div v-if="editModalOpen" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div class="w-1/3 p-6 bg-white rounded shadow">
-        <h2 class="mb-4 text-lg font-medium text-gray-700">Edit Supplier</h2>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Name</label>
-          <input
-            v-model="selectedSupplier.name"
-            type="text"
-            class="w-full px-3 py-2 border rounded"
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Address</label>
-          <input
-            v-model="selectedSupplier.details.address"
-            type="text"
-            class="w-full px-3 py-2 border rounded"
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Contact</label>
-          <input
-            v-model="selectedSupplier.details.contact"
-            type="text"
-            class="w-full px-3 py-2 border rounded"
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Certifications</label>
-          <input
-            v-model="selectedSupplier.details.certifications"
-            type="text"
-            class="w-full px-3 py-2 border rounded"
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium">Picture</label>
-          <input
-            type="file"
-            accept="image/*"
-            @change="handleImageUpload"
-            class="w-full px-3 py-2 border rounded"
-          />
-          <div v-if="imagePreview" class="mt-2">
-            <img :src="imagePreview" alt="Image preview" class="w-32 h-32 object-cover rounded" />
-          </div>
-        </div>
-        <div class="flex justify-end space-x-4">
-          <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded">
-            Cancel
-          </button>
-          <button @click="saveChanges" class="px-4 py-2 text-white bg-blue-500 rounded">
-            Save
-          </button>
-        </div>
+    <!-- Supplier List -->
+    <div class="mt-8">
+      <h4 class="text-xl font-medium text-gray-600">Supplier List</h4>
+      <div class="mt-4 overflow-x-auto">
+        <table class="min-w-full bg-white border">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="px-6 py-3 text-left text-sm">Name</th>
+              <th class="px-6 py-3 text-left text-sm">Contact</th>
+              <th class="px-6 py-3 text-left text-sm">Verified</th>
+              <th class="px-6 py-3 text-left text-sm">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="supplier in filteredSuppliers" :key="supplier.id" class="hover:bg-gray-100">
+              <td class="px-6 py-4">{{ supplier.name }}</td>
+              <td class="px-6 py-4">{{ supplier.contact }}</td>
+              <td class="px-6 py-4">
+                <span
+                  class="px-2 py-1 rounded"
+                  :class="supplier.verified ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
+                >
+                  {{ supplier.verified ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 flex space-x-2">
+                <!-- Detail Button -->
+                <button
+                  @click="showDetailModal(supplier)"
+                  class="px-4 py-2 text-white bg-blue-500 rounded"
+                >
+                  Detail
+                </button>
+                <!-- Edit Button -->
+                <button
+                  v-if="isAdmin || supplier.id === user.id"
+                  @click="openEditModal(supplier)"
+                  class="px-4 py-2 text-white bg-yellow-500 rounded"
+                >
+                  Edit
+                </button>
+                <!-- Delete Button -->
+                <button
+                  v-if="isAdmin"
+                  @click="deleteSupplier(supplier)"
+                  class="px-4 py-2 text-white bg-red-500 rounded"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

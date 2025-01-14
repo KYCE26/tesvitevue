@@ -21,11 +21,9 @@ const suppliersData = ref<Supplier[]>(suppliers);
 // Computed untuk menampilkan data sesuai role
 const filteredSuppliers = computed(() => {
   if (isAdmin) {
-    // Admin dapat melihat semua data
-    return suppliersData.value;
+    return suppliersData.value; // Admin dapat melihat semua data
   } else {
-    // Supplier hanya dapat melihat data miliknya
-    return suppliersData.value.filter((supplier) => supplier.id === user.id);
+    return suppliersData.value.filter((supplier) => supplier.id === user.id); // Supplier hanya dapat melihat data miliknya
   }
 });
 
@@ -45,7 +43,7 @@ const showDetailModal = (supplier: Supplier) => {
   });
 };
 
-// CRUD functions hanya untuk admin atau supplier miliknya
+// Fungsi untuk membuka modal edit
 const openEditModal = (supplier: Supplier | null = null) => {
   const isEdit = !!supplier;
   const defaultData = supplier || {
@@ -69,15 +67,32 @@ const openEditModal = (supplier: Supplier | null = null) => {
       <input id="contact" value="${defaultData.contact}" class="swal2-input" />
       <label>Certifications</label>
       <input id="certifications" value="${defaultData.certifications}" class="swal2-input" />
+      ${
+        isAdmin
+          ? `<label>Verified</label>
+             <select id="verified" class="swal2-select">
+               <option value="true" ${defaultData.verified ? 'selected' : ''}>Yes</option>
+               <option value="false" ${!defaultData.verified ? 'selected' : ''}>No</option>
+             </select>`
+          : ''
+      }
     `,
     showCancelButton: true,
     confirmButtonText: isEdit ? 'Save' : 'Add',
-    preConfirm: () => ({
-      name: (document.getElementById('name') as HTMLInputElement).value,
-      address: (document.getElementById('address') as HTMLInputElement).value,
-      contact: (document.getElementById('contact') as HTMLInputElement).value,
-      certifications: (document.getElementById('certifications') as HTMLInputElement).value,
-    }),
+    preConfirm: () => {
+      const formData: Partial<Supplier> = {
+        name: (document.getElementById('name') as HTMLInputElement).value,
+        address: (document.getElementById('address') as HTMLInputElement).value,
+        contact: (document.getElementById('contact') as HTMLInputElement).value,
+        certifications: (document.getElementById('certifications') as HTMLInputElement).value,
+      };
+
+      if (isAdmin) {
+        formData.verified = (document.getElementById('verified') as HTMLSelectElement).value === 'true';
+      }
+
+      return formData;
+    },
   }).then((result) => {
     if (result.isConfirmed) {
       if (isEdit) {
@@ -100,7 +115,7 @@ const openEditModal = (supplier: Supplier | null = null) => {
   });
 };
 
-// Delete supplier (Hanya untuk admin)
+// Fungsi untuk menghapus supplier (hanya admin)
 const deleteSupplier = (supplier: Supplier) => {
   if (!isAdmin) return; // Batasi akses
   Swal.fire({
@@ -123,7 +138,7 @@ const deleteSupplier = (supplier: Supplier) => {
     <h3 class="text-3xl font-medium text-gray-700">Supplier Profiles</h3>
 
     <!-- Add Supplier Button -->
-    <div v-if="isAdmin || !suppliersData.some(s => s.id === user.id)" class="mt-4">
+    <div v-if="isAdmin || !suppliersData.some((s) => s.id === user.id)" class="mt-4">
       <button @click="openEditModal(null)" class="px-4 py-2 text-white bg-green-500 rounded">
         Add Supplier
       </button>

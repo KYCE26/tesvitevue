@@ -16,7 +16,7 @@ const rawMaterials = [
     amount: "50 kg",
     source: "Bandung Barat",
     category: "Sayuran",
-    status: "Habis",
+    status: "Tersedia",
     date: "2024-12-26"
   },
   {
@@ -36,36 +36,39 @@ const finishedProducts = [
     id: 1,
     product: "Nasi Goreng",
     ingredients: [
-      "Beras",
-      "Ayam",
-      "Sayur Mayur"
+      { material: "Beras", amount: "50 kg" },
+      { material: "Ayam", amount: "30 kg" },
+      { material: "Sayur Mayur", amount: "20 kg" }
     ],
     category: "Makanan Pokok",
     status: "Tersedia",
+    stock: 50, // Stok produk
     date: "2024-12-27"
   },
   {
     id: 2,
     product: "Mie Goreng",
     ingredients: [
-      "Tepung Terigu",
-      "Ayam",
-      "Sayur Mayur"
+      { material: "Tepung Terigu", amount: "20 kg" },
+      { material: "Ayam", amount: "15 kg" },
+      { material: "Sayur Mayur", amount: "10 kg" }
     ],
     category: "Lauk",
     status: "Tersedia",
+    stock: 30, // Stok produk
     date: "2024-12-26"
   },
   {
     id: 3,
     product: "Soto Ayam",
     ingredients: [
-      "Ayam",
-      "Bumbu Soto",
-      "Sayur Mayur"
+      { material: "Ayam", amount: "40 kg" },
+      { material: "Bumbu Soto", amount: "10 kg" },
+      { material: "Sayur Mayur", amount: "15 kg" }
     ],
     category: "Makanan Pokok",
     status: "Tersedia",
+    stock: 40, // Stok produk
     date: "2024-12-25"
   }
 ];

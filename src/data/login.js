@@ -17,4 +17,10 @@ export const loginData = [
         password: "kyce123",
         role: "supplier", // Role untuk supplier
     },
+    {
+      id: 4,
+      email: "kyce@example.com",
+      password: "kyce123",
+      role: "supplier", // Role untuk supplier
+  },
   ];

@@ -29,21 +29,21 @@ let isOpen = ref(1);
             <i class="fa-solid fa-location-dot text-theme-primary text-2xl mr-4"></i>
             <h2 class="text-lg font-semibold text-gray-800">Alamat</h2>
           </div>
-          <p class="text-gray-600">{{ supplier.details.address }}</p>
+          <p class="text-gray-600">{{ supplier.address }}</p>
 
           <!-- Card 3: Kontak -->
           <div class="flex items-center mb-4 mt-6">
             <i class="fa-solid fa-phone text-theme-primary text-2xl mr-4"></i>
             <h2 class="text-lg font-semibold text-gray-800">Kontak</h2>
           </div>
-          <p class="text-gray-600">{{ supplier.details.contact }}</p>
+          <p class="text-gray-600">{{ supplier.contact }}</p>
 
           <!-- Card 4: Sertifikasi -->
           <div class="flex items-center mb-4 mt-6">
             <i class="fa-solid fa-award text-theme-primary text-2xl mr-4"></i>
             <h2 class="text-lg font-semibold text-gray-800">Sertifikasi</h2>
           </div>
-          <p class="text-gray-600">{{ supplier.details.certifications.join(", ") }}</p>
+          <p class="text-gray-600">{{ supplier.certifications }}</p>
         </div>
       </div>
 

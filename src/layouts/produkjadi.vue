@@ -1,277 +1,188 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { rawMaterials, finishedProducts } from '../data/makanan.js';
+import { rawMaterials } from '../data/makanan.js'; // Data bahan mentah
+import cookedDishes from '../data/masak.js'; // Data masakan
+import menuData from '../data/menu.js';
 import Swal from 'sweetalert2';
 
 interface RawMaterial {
   id: number;
-  supplier: string;
   material: string;
-  amount: string; // String, konversi ke number
-  source: string;
-  category: string;
-  status: string;
-  date: string;
+  amount: string; // Jumlah bahan mentah, dalam kg
 }
 
-interface FinishedProduct {
+interface CookedDish {
   id: number;
-  product: string;
-  ingredients: { material: string; amount: string }[]; // Bahan dan jumlahnya
-  category: string;
+  name: string;
+  materials: { material: string; amount: string }[]; // Array bahan mentah dan jumlahnya
   status: string;
-  stock: number; // Atribut stok baru
   date: string;
 }
 
-const rawMaterialList = ref<RawMaterial[]>(rawMaterials);
-const finishedProductList = ref<FinishedProduct[]>(finishedProducts);
+interface Menu {
+  id: number;
+  name: string;
+  dishes: { name: string; stock: number }[]; // Produk masak dalam menu
+  stock: number; // Jumlah stok menu
+  date: string; // Tanggal pembuatan
+}
+
+// Simulasi data user login
 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+const isAdmin = currentUser.role === 'admin'; // Cek apakah user adalah admin
 
-// Fungsi untuk mencari bahan mentah berdasarkan nama
-const findRawMaterial = (materialName: string) =>
-  rawMaterialList.value.find((raw) => raw.material === materialName);
+// Data bahan mentah, masakan, dan menu
+const rawMaterialList = ref<RawMaterial[]>(rawMaterials);
+const cookedDishList = ref<CookedDish[]>(cookedDishes);
+const menuList = ref<Menu[]>(menuData);
 
-// Fungsi untuk membuat produk baru
-const createProduct = () => {
-  if (currentUser?.role !== 'admin') return;
+// Fungsi untuk membuat menu baru (Hanya Admin)
+const createMenu = () => {
+  if (!isAdmin) return; // Batasi akses hanya untuk admin
 
   Swal.fire({
-    title: 'Add New Product',
-    html: `
-      <div>
-        <label class="block text-sm font-medium">Product Name</label>
-        <input id="product-name" type="text" class="swal2-input" placeholder="Enter product name" />
-        <label class="block text-sm font-medium">Category</label>
-        <input id="product-category" type="text" class="swal2-input" placeholder="Enter category" />
-        <label class="block text-sm font-medium">Stock</label>
-        <input id="product-stock" type="number" class="swal2-input" placeholder="Enter stock" />
-        <label class="block text-sm font-medium">Select Ingredients</label>
-        <div id="ingredients-container">
-          ${rawMaterialList.value
+  title: 'Add New Menu',
+  html: `
+    <div class="flex flex-col items-center space-y-4" style="max-width: 400px; margin: auto;">
+      <div class="w-full text-center">
+        <label class="block text-sm font-medium mb-1" style="text-align: center;">Menu Name</label>
+        <input id="menu-name" type="text" class="swal2-input" style="max-width: 100%; text-align: center;" placeholder="Enter menu name" />
+      </div>
+
+      <div class="w-full text-center">
+        <label class="block text-sm font-medium mb-1" style="text-align: center;">Select Cooked Dishes</label>
+        <div id="dishes-container" class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+          ${cookedDishList.value
             .map(
-              (material) => `
-            <div class="flex items-center mt-2">
-              <input type="checkbox" class="ingredient-checkbox" value="${material.id}" />
-              <span class="ml-2">${material.material} (${material.amount})</span>
-              <input type="number" class="ingredient-amount ml-4 border rounded px-2" placeholder="Amount (kg)" />
-            </div>
+              (dish) => `
+            <label class="flex items-center justify-center space-x-2">
+              <input type="checkbox" class="dish-checkbox" value="${dish.id}" />
+              <span>${dish.name}</span>
+            </label>
           `
             )
             .join('')}
         </div>
-        <label class="block text-sm font-medium mt-4">Status</label>
-        <select id="product-status" class="swal2-select">
-          <option value="Tersedia">Tersedia</option>
-          <option value="Habis">Habis</option>
-        </select>
       </div>
-    `,
-    showCancelButton: true,
-    confirmButtonText: 'Add',
-    preConfirm: () => {
-      const name = (document.getElementById('product-name') as HTMLInputElement).value;
-      const category = (document.getElementById('product-category') as HTMLInputElement).value;
-      const stock = parseInt((document.getElementById('product-stock') as HTMLInputElement).value, 10);
-      const status = (document.getElementById('product-status') as HTMLSelectElement).value;
 
-      const selectedIngredients: { material: string; amount: string }[] = [];
-      document.querySelectorAll('.ingredient-checkbox').forEach((checkbox, index) => {
-        if ((checkbox as HTMLInputElement).checked) {
-          const rawMaterial = rawMaterialList.value.find(
-            (m) => m.id === parseInt((checkbox as HTMLInputElement).value, 10)
-          );
-          const amountInput = document.querySelectorAll('.ingredient-amount')[index] as HTMLInputElement;
-          const amount = parseFloat(amountInput.value);
-
-          if (rawMaterial && amount > 0 && amount <= parseFloat(rawMaterial.amount)) {
-            selectedIngredients.push({ material: rawMaterial.material, amount: `${amount} kg` });
-            rawMaterial.amount = `${parseFloat(rawMaterial.amount) - amount} kg`;
-          } else {
-            Swal.showValidationMessage(`Invalid amount for ${rawMaterial?.material || 'selected material'}`);
-            return null;
-          }
-        }
-      });
-
-      if (!name || !category || isNaN(stock) || selectedIngredients.length === 0) {
-        Swal.showValidationMessage('Please fill in all fields and select at least one ingredient');
-        return null;
-      }
-
-      return { name, category, stock, status, ingredients: selectedIngredients };
-    },
-  }).then((result) => {
-    if (result.isConfirmed) {
-      const { name, category, stock, status, ingredients } = result.value;
-
-      finishedProductList.value.push({
-        id: finishedProductList.value.length + 1,
-        product: name,
-        category,
-        stock,
-        status,
-        date: new Date().toISOString().split('T')[0],
-        ingredients,
-      });
-
-      Swal.fire('Added!', 'New product has been successfully added.', 'success');
-    }
-  });
-};
-
-// Fungsi untuk menampilkan detail
-const showDetails = (product: FinishedProduct) => {
-  const ingredientsDetails = product.ingredients
-    .map((ingredient) => `<li>${ingredient.material}: ${ingredient.amount}</li>`)
-    .join('');
-
-  Swal.fire({
-    title: product.product,
-    html: `
-      <div class='text-left'>
-        <p><strong>Ingredients:</strong></p>
-        <ul>${ingredientsDetails}</ul>
-        <p><strong>Category:</strong> ${product.category}</p>
-        <p><strong>Stock:</strong> ${product.stock}</p>
-        <p><strong>Status:</strong> ${product.status}</p>
-        <p><strong>Date:</strong> ${product.date}</p>
+      <div class="w-full text-center">
+        <label class="block text-sm font-medium mb-1" style="text-align: center;">Stock</label>
+        <input id="menu-stock" type="number" class="swal2-input" style="max-width: 100%; text-align: center;" placeholder="Enter stock" />
       </div>
-    `,
-    showCancelButton: true,
-    cancelButtonText: 'Close',
-    showConfirmButton: currentUser?.role === 'admin',
-    confirmButtonText: 'Edit',
-  }).then((result) => {
-    if (result.isConfirmed && currentUser?.role === 'admin') {
-      editProduct(product);
-    }
-  });
-};
+    </div>
+  `,
+  showCancelButton: true,
+  confirmButtonText: 'Add',
+  preConfirm: () => {
+    const name = (document.getElementById('menu-name') as HTMLInputElement).value;
+    const stock = parseInt((document.getElementById('menu-stock') as HTMLInputElement).value, 10);
 
-// Fungsi untuk mengedit produk
-const editProduct = (product: FinishedProduct) => {
-  Swal.fire({
-    title: `Edit Product: ${product.product}`,
-    html: `
-      <div>
-        <label class="block text-sm font-medium">Product Name</label>
-        <input id="product-name" type="text" class="swal2-input" value="${product.product}" />
-        <label class="block text-sm font-medium">Category</label>
-        <input id="product-category" type="text" class="swal2-input" value="${product.category}" />
-        <label class="block text-sm font-medium">Stock</label>
-        <input id="product-stock" type="number" class="swal2-input" value="${product.stock}" />
-        <label class="block text-sm font-medium">Ingredients</label>
-        <div id="ingredients-container">
-          ${rawMaterialList.value
-            .map((rawMaterial) => {
-              const existingIngredient = product.ingredients.find((i) => i.material === rawMaterial.material);
-              return `
-              <div class="flex items-center mt-2">
-                <input
-                  type="checkbox"
-                  class="ingredient-checkbox"
-                  value="${rawMaterial.id}"
-                  ${existingIngredient ? 'checked' : ''}
-                />
-                <span class="ml-2">${rawMaterial.material} (${rawMaterial.amount})</span>
-                <input
-                  type="number"
-                  class="ingredient-amount ml-4 border rounded px-2"
-                  placeholder="Amount (kg)"
-                  value="${existingIngredient ? parseFloat(existingIngredient.amount) : ''}"
-                  ${existingIngredient ? '' : 'disabled'}
-                />
-              </div>
-              `;
-            })
-            .join('')}
-        </div>
-        <label class="block text-sm font-medium mt-4">Status</label>
-        <select id="product-status" class="swal2-select">
-          <option value="Tersedia" ${product.status === 'Tersedia' ? 'selected' : ''}>Tersedia</option>
-          <option value="Habis" ${product.status === 'Habis' ? 'selected' : ''}>Habis</option>
-        </select>
-      </div>
-    `,
-    showCancelButton: true,
-    confirmButtonText: 'Save',
-    preConfirm: () => {
-      const name = (document.getElementById('product-name') as HTMLInputElement).value;
-      const category = (document.getElementById('product-category') as HTMLInputElement).value;
-      const stock = parseInt((document.getElementById('product-stock') as HTMLInputElement).value, 10);
-      const status = (document.getElementById('product-status') as HTMLSelectElement).value;
-
-      const updatedIngredients: { material: string; amount: string }[] = [];
-      document.querySelectorAll('.ingredient-checkbox').forEach((checkbox, index) => {
-        const isChecked = (checkbox as HTMLInputElement).checked;
-        const rawMaterial = rawMaterialList.value.find(
-          (m) => m.id === parseInt((checkbox as HTMLInputElement).value, 10)
+    const selectedDishes: { name: string; stock: number }[] = [];
+    document.querySelectorAll('.dish-checkbox').forEach((checkbox) => {
+      if ((checkbox as HTMLInputElement).checked) {
+        const dish = cookedDishList.value.find(
+          (d) => d.id === parseInt((checkbox as HTMLInputElement).value, 10)
         );
-        const amountInput = document.querySelectorAll('.ingredient-amount')[index] as HTMLInputElement;
-        const amount = parseFloat(amountInput.value);
-
-        if (isChecked && rawMaterial && amount > 0) {
-          updatedIngredients.push({ material: rawMaterial.material, amount: `${amount} kg` });
-
-          // Update jumlah bahan mentah
-          const existingIngredient = product.ingredients.find((i) => i.material === rawMaterial.material);
-          const originalAmount = existingIngredient
-            ? parseFloat(existingIngredient.amount)
-            : 0;
-          rawMaterial.amount = `${parseFloat(rawMaterial.amount) + originalAmount - amount} kg`;
-        } else if (isChecked && (!rawMaterial || amount <= 0)) {
-          Swal.showValidationMessage(`Invalid amount for ${rawMaterial?.material || 'selected material'}`);
-          return null;
+        if (dish) {
+          selectedDishes.push({ name: dish.name, stock });
         }
-      });
-
-      if (!name || !category || isNaN(stock) || updatedIngredients.length === 0) {
-        Swal.showValidationMessage('Please fill in all fields and select at least one ingredient');
-        return null;
       }
+    });
 
-      return { name, category, stock, status, ingredients: updatedIngredients };
-    },
-  }).then((result) => {
-    if (result.isConfirmed) {
-      const { name, category, stock, status, ingredients } = result.value;
-
-      product.product = name;
-      product.category = category;
-      product.stock = stock;
-      product.status = status;
-      product.ingredients = ingredients;
-
-      Swal.fire('Saved!', 'Product updated successfully.', 'success');
+    if (!name || isNaN(stock) || selectedDishes.length === 0) {
+      Swal.showValidationMessage('Please fill in all fields and select at least one dish');
+      return null;
     }
+
+    return { name, stock, selectedDishes };
+  },
+}).then((result) => {
+  if (result.isConfirmed) {
+    const { name, stock, selectedDishes } = result.value;
+
+    // Kurangi bahan mentah berdasarkan jumlah stok
+    selectedDishes.forEach((dish) => {
+      const cookedDish = cookedDishList.value.find((d) => d.name === dish.name);
+      if (cookedDish) {
+        cookedDish.materials.forEach((material) => {
+          const rawMaterial = rawMaterialList.value.find((raw) => raw.material === material.material);
+          if (rawMaterial) {
+            const rawAmount = parseFloat(rawMaterial.amount);
+            const requiredAmount = parseFloat(material.amount) * stock;
+            rawMaterial.amount = `${rawAmount - requiredAmount} kg`;
+          }
+        });
+      }
+    });
+
+    // Tambahkan menu ke daftar menu
+    menuList.value.push({
+      id: menuList.value.length + 1,
+      name,
+      dishes: selectedDishes,
+      stock,
+      date: new Date().toISOString().split('T')[0],
+    });
+
+    Swal.fire('Added!', 'New menu has been successfully added.', 'success');
+  }
+});
+
+};
+
+// Fungsi untuk menampilkan detail menu (Akses Semua User)
+const showMenuDetails = (menu: Menu) => {
+  const dishesDetails = menu.dishes
+    .map((dish) => `${dish.stock} x ${dish.name}`)
+    .join(', ');
+
+  Swal.fire({
+    title: menu.name,
+    html: `
+      <div class="text-left">
+        <p><strong>Stock:</strong> ${menu.stock}</p>
+        <p><strong>Dishes:</strong> ${dishesDetails}</p>
+        <p><strong>Date:</strong> ${menu.date}</p>
+      </div>
+    `,
+    confirmButtonText: 'Close',
   });
 };
 
+// Fungsi untuk menghapus menu (Hanya Admin)
+const deleteMenu = (menu: Menu) => {
+  if (!isAdmin) return; // Batasi akses hanya untuk admin
 
-// Fungsi untuk menghapus produk
-const deleteProduct = (product: FinishedProduct) => {
   Swal.fire({
     title: 'Are you sure?',
-    text: `Delete "${product.product}"?`,
+    text: `Delete "${menu.name}"?`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Yes, delete it!',
   }).then((result) => {
     if (result.isConfirmed) {
-      product.ingredients.forEach((ingredient) => {
-        const rawMaterial = findRawMaterial(ingredient.material);
-        if (rawMaterial) {
-          rawMaterial.amount = `${parseFloat(rawMaterial.amount) + parseFloat(ingredient.amount)} kg`;
+      // Kembalikan bahan mentah saat menu dihapus
+      menu.dishes.forEach((dish) => {
+        const cookedDish = cookedDishList.value.find((d) => d.name === dish.name);
+        if (cookedDish) {
+          cookedDish.materials.forEach((material) => {
+            const rawMaterial = rawMaterialList.value.find((raw) => raw.material === material.material);
+            if (rawMaterial) {
+              const rawAmount = parseFloat(rawMaterial.amount);
+              const restoredAmount = parseFloat(material.amount) * menu.stock;
+              rawMaterial.amount = `${rawAmount + restoredAmount} kg`;
+            }
+          });
         }
       });
 
-      const index = finishedProductList.value.findIndex((p) => p.id === product.id);
+      // Hapus menu dari daftar
+      const index = menuList.value.findIndex((m) => m.id === menu.id);
       if (index !== -1) {
-        finishedProductList.value.splice(index, 1);
+        menuList.value.splice(index, 1);
       }
 
-      Swal.fire('Deleted!', 'Product has been deleted.', 'success');
+      Swal.fire('Deleted!', 'Menu has been deleted.', 'success');
     }
   });
 };
@@ -279,27 +190,45 @@ const deleteProduct = (product: FinishedProduct) => {
 
 <template>
   <div class="space-y-4">
+    <!-- Tombol Tambah (Hanya Admin) -->
     <button
-      v-if="currentUser?.role === 'admin'"
-      @click="createProduct"
+      v-if="isAdmin"
+      @click="createMenu"
       class="fixed bottom-6 right-6 w-16 h-16 bg-green-500 text-white text-4xl font-bold rounded-full shadow-xl hover:bg-green-600"
-      title="Add Product"
+      title="Add Menu"
     >
       +
     </button>
 
+    <!-- Daftar Menu -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div v-for="product in finishedProductList" :key="product.id" class="bg-white shadow-md rounded-lg p-4">
-        <h3 class="text-lg font-bold">{{ product.product }}</h3>
-        <p class="text-sm text-gray-600">Category: {{ product.category }}</p>
-        <p class="text-sm text-gray-600">Stock: {{ product.stock }}</p>
-        <p class="text-sm text-gray-600">Status: {{ product.status }}</p>
+      <div
+        v-for="menu in menuList"
+        :key="menu.id"
+        class="bg-white shadow-md rounded-lg p-4"
+      >
+        <h3 class="text-lg font-bold">{{ menu.name }}</h3>
+        <p class="text-sm text-gray-600">Stock: {{ menu.stock }}</p>
+        <p class="text-sm text-gray-600">
+          Dishes: 
+          <span v-for="(dish, index) in menu.dishes" :key="index">
+            {{ dish.stock }} x {{ dish.name }}<span v-if="index < menu.dishes.length - 1">, </span>
+          </span>
+        </p>
+        <p class="text-sm text-gray-600">Date: {{ menu.date }}</p>
         <div class="mt-4 flex justify-between">
-          <button @click="showDetails(product)" class="px-4 py-2 bg-blue-500 text-white rounded">Detail</button>
+          <!-- Detail Button (Akses Semua User) -->
           <button
-            v-if="currentUser?.role === 'admin'"
-            @click="deleteProduct(product)"
-            class="px-4 py-2 bg-red-500 text-white rounded"
+            @click="showMenuDetails(menu)"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Detail
+          </button>
+          <!-- Delete Button (Hanya Admin) -->
+          <button
+            v-if="isAdmin"
+            @click="deleteMenu(menu)"
+            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
             Delete
           </button>

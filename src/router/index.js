@@ -10,6 +10,8 @@ import Makanan from '../sections/MakananSection.vue';
 import TableMakanan from '../layouts/Table-Makanan.vue';
 import Produkjadi from '../layouts/produkjadi.vue';
 import Cards from '../layouts/cards.vue';
+import Masak from '../layouts/masak.vue';
+import TableDistri from '../layouts/table-distri.vue';
 
 
 const routes = [
@@ -59,6 +61,12 @@ const routes = [
     meta: { layout: 'empty' },
   },
   {
+    path: '/table-distri',
+    name: 'table-distri',
+    component: TableDistri,
+    meta: { layout: 'empty' },
+  },
+  {
     path: '/produkjadi',
     name: 'ProdukJadi',
     component: Produkjadi,
@@ -67,6 +75,11 @@ const routes = [
     path: '/cards',
     name: 'Cards',
     component: Cards,
+  },
+  {
+    path: '/masak',
+    name: 'Masak',
+    component: Masak,
   },
   // tambahkan rute lainnya
 ];

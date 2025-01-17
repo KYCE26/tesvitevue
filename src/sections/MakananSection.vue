@@ -1,71 +1,38 @@
 <script setup>
-import { rawMaterials, finishedProducts } from '../data/makanan.js';  // Data bahan mentah dan produk jadi
+import menuData from '../data/menu.js'; // Import data menu
 </script>
 
 <template>
   <div class="container mx-auto px-5 pt-10 pb-16">
-    <h1 class="text-4xl font-bold text-center mb-12 text-theme-primary">Informasi Supplier dan Produk</h1>
-    
-    <!-- Table for Raw Materials -->
-    <div class="mb-16">
-      <h2 class="text-2xl font-semibold text-center mb-6 text-theme-secondary">Bahan Mentah</h2>
-      <div class="overflow-x-auto rounded-lg shadow-lg">
-        <table class="min-w-full table-auto text-left">
-          <thead class="bg-theme-primary text-white">
-            <tr>
-              <th class="px-6 py-4 border-b">Supplier</th>
-              <th class="px-6 py-4 border-b">Bahan Mentah</th>
-              <th class="px-6 py-4 border-b">Jumlah</th>
-              <th class="px-6 py-4 border-b">Sumber</th>
-              <th class="px-6 py-4 border-b">Kategori</th>
-              <th class="px-6 py-4 border-b">Status</th>
-              <th class="px-6 py-4 border-b">Tanggal</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="material in rawMaterials" :key="material.id" class="hover:bg-theme-light-gray">
-              <td class="px-6 py-4 border-b">{{ material.supplier }}</td>
-              <td class="px-6 py-4 border-b">{{ material.material }}</td>
-              <td class="px-6 py-4 border-b">{{ material.amount }}</td>
-              <td class="px-6 py-4 border-b">{{ material.source }}</td>
-              <td class="px-6 py-4 border-b">{{ material.category }}</td>
-              <td class="px-6 py-4 border-b">{{ material.status }}</td>
-              <td class="px-6 py-4 border-b">{{ material.date }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <h1 class="text-4xl font-bold text-center mb-12 text-theme-primary">Menu</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      <div
+        v-for="menu in menuData"
+        :key="menu.id"
+        class="bg-white shadow-lg rounded-xl p-6 hover:shadow-2xl transition-shadow duration-300"
+      >
+        <!-- Nama Menu -->
+        <h2 class="text-xl font-semibold text-theme-primary mb-4">{{ menu.name }}</h2>
 
-    <!-- Table for Finished Products -->
-    <div>
-      <h2 class="text-2xl font-semibold text-center mb-6 text-theme-secondary">Produk Jadi</h2>
-      <div class="overflow-x-auto rounded-lg shadow-lg">
-        <table class="min-w-full table-auto text-left">
-          <thead class="bg-theme-primary text-white">
-            <tr>
-              <th class="px-6 py-4 border-b">Produk</th>
-              <th class="px-6 py-4 border-b">Bahan Mentah</th>
-              <th class="px-6 py-4 border-b">Kategori</th>
-              <th class="px-6 py-4 border-b">Status</th>
-              <th class="px-6 py-4 border-b">Tanggal</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="product in finishedProducts" :key="product.id" class="hover:bg-theme-light-gray">
-              <td class="px-6 py-4 border-b">{{ product.product }}</td>
-              <td class="px-6 py-4 border-b">{{ product.ingredients.join(', ') }}</td>
-              <td class="px-6 py-4 border-b">{{ product.category }}</td>
-              <td class="px-6 py-4 border-b">{{ product.status }}</td>
-              <td class="px-6 py-4 border-b">{{ product.date }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Daftar Hidangan -->
+        <div>
+          <p class="font-semibold text-gray-700 mb-2">Isi:</p>
+          <ul class="list-disc list-inside text-gray-600">
+            <li v-for="(dish, index) in menu.dishes" :key="index">
+              {{ dish.name }} (Stock: {{ dish.stock }})
+            </li>
+          </ul>
+        </div>
+
+        <!-- Informasi Tambahan -->
+        <div class="mt-4 text-sm text-gray-500">
+          <p><strong>Total Stock:</strong> {{ menu.stock }}</p>
+          <p><strong>Date:</strong> {{ menu.date }}</p>
+        </div>
       </div>
     </div>
   </div>
 </template>
-
 
 <style scoped>
   /* Custom Theme Colors */

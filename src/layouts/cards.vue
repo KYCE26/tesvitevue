@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { finishedProducts } from '../data/makanan.js';
+import menuData from '../data/menu.js';
 import { distribusiData } from '../data/distribusi.js';
 import Swal from 'sweetalert2';
 
@@ -12,9 +12,9 @@ interface Distribusi {
   tanggal: string;
 }
 
-interface FinishedProduct {
+interface menuData {
   id: number;
-  product: string;
+  name: string;
   stock: number; // Stok
   category: string;
   status: string;
@@ -23,7 +23,7 @@ interface FinishedProduct {
 
 const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 const distribusiList = ref<Distribusi[]>(distribusiData);
-const finishedProductList = ref<FinishedProduct[]>(finishedProducts);
+const menuDataList = ref<menuData[]>(menuData);
 
 // Fungsi untuk menambah distribusi
 function openCreateModal() {
@@ -35,12 +35,12 @@ function openCreateModal() {
       <div class="text-left">
         <label class="block text-sm font-medium text-gray-700">Pilih Menu</label>
         <select id="menu" class="swal2-select">
-          ${finishedProductList.value
+          ${menuDataList.value
             .map(
-              (product) =>
-                `<option value="${product.id}" ${
-                  product.stock > 0 ? '' : 'disabled'
-                }>${product.product} (Stok: ${product.stock})</option>`
+              (name) =>
+                `<option value="${name.id}" ${
+                  name.stock > 0 ? '' : 'disabled'
+                }>${name.name} (Stok: ${name.stock})</option>`
             )
             .join('')}
         </select>
@@ -63,15 +63,15 @@ function openCreateModal() {
       const sekolah = (document.getElementById('sekolah') as HTMLInputElement).value;
       const tanggal = (document.getElementById('tanggal') as HTMLInputElement).value;
 
-      const selectedProduct = finishedProductList.value.find((p) => p.id === menuId);
+      const selectedname = menuDataList.value.find((p) => p.id === menuId);
 
-      if (!selectedProduct) {
+      if (!selectedname) {
         Swal.showValidationMessage('Menu tidak valid.');
         return null;
       }
 
-      if (stok <= 0 || stok > selectedProduct.stock) {
-        Swal.showValidationMessage(`Stok harus antara 1 hingga ${selectedProduct.stock}`);
+      if (stok <= 0 || stok > selectedname.stock) {
+        Swal.showValidationMessage(`Stok harus antara 1 hingga ${selectedname.stock}`);
         return null;
       }
 
@@ -80,16 +80,16 @@ function openCreateModal() {
         return null;
       }
 
-      return { menuId, menu: selectedProduct.product, stok, sekolah, tanggal };
+      return { menuId, menu: selectedname.name, stok, sekolah, tanggal };
     },
   }).then((result) => {
     if (result.isConfirmed) {
       const { menuId, menu, stok, sekolah, tanggal } = result.value;
 
       // Kurangi stok dari produk selesai
-      const productIndex = finishedProductList.value.findIndex((p) => p.id === menuId);
-      if (productIndex !== -1) {
-        finishedProductList.value[productIndex].stock -= stok;
+      const nameIndex = menuDataList.value.findIndex((p) => p.id === menuId);
+      if (nameIndex !== -1) {
+        menuDataList.value[nameIndex].stock -= stok;
       }
 
       // Tambahkan distribusi baru
@@ -166,11 +166,11 @@ function openEditModal(distribusi: Distribusi) {
     if (result.isConfirmed) {
       const { stok, sekolah, tanggal } = result.value;
 
-      // Update stok di finishedProducts jika stok diubah
-      const product = finishedProductList.value.find((p) => p.product === distribusi.menu);
-      if (product) {
+      // Update stok di menuDatas jika stok diubah
+      const name = menuDataList.value.find((p) => p.name === distribusi.menu);
+      if (name) {
         const stokDiff = distribusi.stok - stok; // Hitung selisih stok
-        product.stock += stokDiff; // Sesuaikan stok
+        name.stock += stokDiff; // Sesuaikan stok
       }
 
       // Update data distribusi
@@ -195,9 +195,9 @@ function deleteDistribusi(distribusi: Distribusi) {
   }).then((result) => {
     if (result.isConfirmed) {
       // Kembalikan stok ke produk selesai
-      const product = finishedProductList.value.find((p) => p.product === distribusi.menu);
-      if (product) {
-        product.stock += distribusi.stok;
+      const name = menuDataList.value.find((p) => p.name === distribusi.menu);
+      if (name) {
+        name.stock += distribusi.stok;
       }
 
       // Hapus distribusi dari daftar

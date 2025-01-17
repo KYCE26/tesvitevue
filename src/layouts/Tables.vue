@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { rawMaterials } from '../data/makanan.js';
 import { loginData } from '../data/login.js';
+import suppliers from '../data/supplier.js'; // Path harus sesuai
 import Swal from 'sweetalert2';
 
 interface RawMaterial {
@@ -21,7 +22,9 @@ const rawMaterialList = ref<RawMaterial[]>(rawMaterials);
 const currentUser = JSON.parse(localStorage.getItem("user")) || null; // User yang login
 
 // Daftar supplier
-const suppliers = loginData.filter((user) => user.role === 'supplier');
+const supplierAccounts = loginData.filter((user) => user.role === 'supplier');
+
+
 
 // Kategori dan status
 const categories = ['Makanan Pokok', 'Lauk', 'Sayuran'];
@@ -105,6 +108,7 @@ function openCreateModal() {
     preConfirm: () => getFormValues(),
   }).then((result) => {
     if (result.isConfirmed) {
+      // Tambahkan data baru ke daftar bahan mentah
       rawMaterialList.value.push({ id: newMaterial.id, ...result.value });
       Swal.fire('Added!', 'New raw material has been successfully added.', 'success');
     }
@@ -112,20 +116,22 @@ function openCreateModal() {
 }
 
 
+
 // Fungsi untuk menghasilkan form HTML
 function generateMaterialForm(material: RawMaterial, isCreate = false) {
   const supplierOptions = suppliers.map(
     (supplier) =>
-      `<option value="${supplier.email}" ${
-        supplier.email === material.supplier ? 'selected' : ''
-      }>${supplier.email}</option>`
+      `<option value="${supplier.name}" ${
+        supplier.name === material.supplier ? 'selected' : ''
+      }>${supplier.name}</option>`
   ).join('');
 
   return `
     <div class="grid grid-cols-1 gap-4">
       <div>
         <label class="block text-sm font-medium">Supplier</label>
-        <select id="form-supplier" class="swal2-select" ${isCreate ? '' : 'disabled'}>
+        <select id="form-supplier" class="swal2-select">
+          <option value="">-- Select Supplier --</option>
           ${supplierOptions}
         </select>
       </div>
@@ -164,6 +170,9 @@ function generateMaterialForm(material: RawMaterial, isCreate = false) {
     </div>
   `;
 }
+
+
+
 
 function deleteMaterial(material: RawMaterial) {
   // Tampilkan konfirmasi penghapusan
@@ -207,6 +216,8 @@ function getFormValues() {
     date: (document.getElementById('form-date') as HTMLInputElement).value,
   };
 }
+
+
 </script>
 
 <template>

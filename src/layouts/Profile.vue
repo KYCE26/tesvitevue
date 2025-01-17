@@ -43,7 +43,7 @@ const showDetailModal = (supplier: Supplier) => {
   });
 };
 
-// Fungsi untuk membuka modal edit
+// Fungsi untuk membuka modal edit/tambah
 const openEditModal = (supplier: Supplier | null = null) => {
   const isEdit = !!supplier;
   const defaultData = supplier || {
@@ -104,7 +104,7 @@ const openEditModal = (supplier: Supplier | null = null) => {
       } else {
         // Batasi supplier hanya dapat membuat data sekali
         const supplierExists = suppliersData.value.some((s) => s.id === user.id);
-        if (supplierExists) {
+        if (!isAdmin && supplierExists) {
           Swal.fire('Error', 'You can only create one supplier profile.', 'error');
         } else {
           suppliersData.value.push({ id: defaultData.id, ...result.value });

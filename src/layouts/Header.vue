@@ -40,7 +40,9 @@ const goToLogin = () => {
 <li class="uppercase hover:text-theme-secondary transition duration-200">
   <router-link to="/table-makanan">Makanan</router-link>
 </li>
-                    <li class="uppercase hover:text-theme-secondary transition duration-200"><a href="#download-section" v-smooth-scroll>Distribusi</a></li>
+<li class="uppercase hover:text-theme-secondary transition duration-200">
+  <router-link to="/table-distri">Makanan</router-link>
+</li>
                     <li 
   @click.prevent="goToLogin" 
   class="uppercase bg-theme-secondary px-6 py-2 text-white rounded shadow-md hover:bg-white border-2 border-transparent hover:border-theme-secondary hover:text-theme-secondary cursor-pointer transition duration-200"

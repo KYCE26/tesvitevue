@@ -41,7 +41,7 @@ const goToLogin = () => {
   <router-link to="/table-makanan">Makanan</router-link>
 </li>
 <li class="uppercase hover:text-theme-secondary transition duration-200">
-  <router-link to="/table-distri">Makanan</router-link>
+  <router-link to="/table-distri">Distribusi</router-link>
 </li>
                     <li 
   @click.prevent="goToLogin" 

@@ -21,9 +21,9 @@ const loginUser = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include', // 🔥 WAJIB! Agar cookie login tersimpan
+      credentials: 'include', // 🔥 Wajib agar cookie login tersimpan
       body: JSON.stringify({
-        username: username.value, // Backend menggunakan `username`
+        username: username.value,
         password: password.value,
       }),
     });
@@ -31,13 +31,21 @@ const loginUser = async () => {
     const data = await response.json();
 
     if (response.ok) {
-      // ✅ Simpan data user ke localStorage untuk UI (Bukan token!)
+      // ✅ Simpan token ke localStorage
+      if (data.Token) {
+        localStorage.setItem('token', data.Token); // Simpan token JWT
+      }
+
+      // ✅ Simpan data user ke localStorage untuk UI
       localStorage.setItem('user', JSON.stringify({ username: data.Username, role: data.Role }));
 
-      // Notifikasi sukses
+      // 🔥 Debugging: Cek apakah token tersimpan
+      console.log("Token dari Login:", data.Token);
+
+      // ✅ Notifikasi sukses
       Swal.fire({ icon: 'success', title: 'Login Berhasil!', text: `Selamat datang, ${data.Username}!` });
 
-      // Redirect berdasarkan role
+      // ✅ Redirect berdasarkan role
       if (data.Role === 'admin') {
         router.push('/dashboard');
       } else if (data.Role === 'supplier') {

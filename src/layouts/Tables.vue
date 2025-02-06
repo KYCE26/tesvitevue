@@ -1,221 +1,256 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { rawMaterials } from '../data/makanan.js';
-import { loginData } from '../data/login.js';
-import suppliers from '../data/supplier.js'; // Pastikan path sesuai
+import { ref, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 
-interface RawMaterial {
-  id: number;
-  supplier: string;
-  supplierId: number;
-  material: string;
-  amount: string;
-  source: string;
-  category: string;
+// Interface Bahan Mentah
+interface Material {
+  id_bahan: number;
+  nama_bahan: string;
+  jumlah: number;
+  asal_bahan: string;
+  kategori: string;
   status: string;
-  date: string;
+  created_at: string;
+  supplier: {
+    id_supplier: number;
+    nama_supplier: string;
+  };
 }
 
-// Data bahan mentah dan user login
-const rawMaterialList = ref<RawMaterial[]>(rawMaterials);
-const currentUser = JSON.parse(localStorage.getItem("user")) || null; // User yang login
+// Interface Supplier
+interface Supplier {
+  id_supplier: number;
+  nama_supplier: string;
+}
 
-// Daftar supplier dari loginData
-const supplierAccounts = loginData.filter((user) => user.role === 'supplier');
+// ✅ Ambil token dari localStorage
+const token = localStorage.getItem('token');
+const rawMaterials = ref<Material[]>([]);
+const suppliersList = ref<Supplier[]>([]);
 
-// Kategori dan status
-const categories = ['Makanan Pokok', 'Lauk', 'Sayuran'];
-const statuses = ['Tersedia', 'Habis'];
+// ✅ Fetch Data Supplier
+const fetchSuppliers = async () => {
+  try {
+    const response = await fetch('https://sidimasbe.vercel.app/api/supl', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-// Fungsi untuk menampilkan detail menggunakan SweetAlert
-function showDetail(material: RawMaterial) {
+    if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+    const data = await response.json();
+    if (data.Suppliers && Array.isArray(data.Suppliers)) {
+      suppliersList.value = data.Suppliers.map(s => ({
+        id_supplier: s.id_supplier,
+        nama_supplier: s.nama_supplier,
+      }));
+    }
+  } catch (error) {
+    Swal.fire('Error', `Gagal mengambil data supplier: ${error.message}`, 'error');
+  }
+};
+
+// ✅ Fetch Data Bahan Mentah
+const fetchMaterials = async () => {
+  try {
+    if (!token) {
+      Swal.fire('Error', 'Token tidak ditemukan!', 'error');
+      return;
+    }
+
+    const response = await fetch('https://sidimasbe.vercel.app/api/bahan', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+    const data = await response.json();
+    if (data.Materials && Array.isArray(data.Materials)) {
+      rawMaterials.value = [...data.Materials];
+    } else {
+      throw new Error("Data bahan mentah tidak dalam format array!");
+    }
+  } catch (error) {
+    Swal.fire('Error', `Gagal mengambil data bahan mentah: ${error.message}`, 'error');
+  }
+};
+
+// ✅ Modal Tambah/Edit Bahan Mentah
+const openEditModal = (material: Material | null = null) => {
+  const isEdit = !!material;
+  const defaultData = material || {
+    nama_bahan: '',
+    jumlah: '',
+    asal_bahan: '',
+    kategori: '',
+    status: 'Tersedia',
+    id_supplier: suppliersList.value.length > 0 ? suppliersList.value[0].id_supplier : '',
+  };
+
+  // 🔥 Dropdown daftar supplier (paling atas)
+  const supplierOptions = suppliersList.value.map(s =>
+    `<option value="${s.id_supplier}" ${s.id_supplier === defaultData.id_supplier ? 'selected' : ''}>
+      ${s.nama_supplier}
+    </option>`).join('');
+
   Swal.fire({
-    title: 'Detail Bahan Mentah',
+    title: isEdit ? 'Edit Bahan Mentah' : 'Tambah Bahan Mentah',
     html: `
-      <div class="text-left" style="font-size: 14px;">
-        <p><strong>Supplier:</strong> ${material.supplier}</p>
-        <p><strong>Bahan Mentah:</strong> ${material.material}</p>
-        <p><strong>Jumlah:</strong> ${material.amount} kg</p>
-        <p><strong>Sumber:</strong> ${material.source}</p>
-        <p><strong>Kategori:</strong> ${material.category}</p>
-        <p><strong>Status:</strong> ${material.status}</p>
-        <p><strong>Tanggal:</strong> ${material.date}</p>
+      <div style="display: flex; flex-direction: column; gap: 10px; text-align: left; width: 100%; max-width: 400px; margin: auto;">
+        <label class="swal-label">Supplier</label>
+        <select id="id_supplier" class="swal-input swal-wide">
+          ${supplierOptions}
+        </select>
+
+        <label class="swal-label">Nama Bahan</label>
+        <input id="nama_bahan" class="swal-input swal-wide" value="${defaultData.nama_bahan}" />
+
+        <label class="swal-label">Jumlah (kg)</label>
+        <input id="jumlah" type="number" class="swal-input swal-wide" value="${defaultData.jumlah}" />
+
+        <label class="swal-label">Asal Bahan</label>
+        <input id="asal_bahan" class="swal-input swal-wide" value="${defaultData.asal_bahan}" />
+
+        <label class="swal-label">Kategori</label>
+        <input id="kategori" class="swal-input swal-wide" value="${defaultData.kategori}" />
+
+        <label class="swal-label">Status</label>
+        <select id="status" class="swal-input swal-wide">
+          <option value="Tersedia" ${defaultData.status === 'Tersedia' ? 'selected' : ''}>Tersedia</option>
+          <option value="Habis" ${defaultData.status === 'Habis' ? 'selected' : ''}>Habis</option>
+        </select>
       </div>
     `,
     showCancelButton: true,
-    cancelButtonText: 'Tutup',
-    showConfirmButton: currentUser?.role === 'admin',
-    confirmButtonText: 'Edit',
-  }).then((result) => {
-    if (result.isConfirmed && currentUser?.role === 'admin') {
-      openEditModal(material);
-    }
-  });
-}
-
-// Fungsi untuk membuka modal edit
-function openEditModal(material: RawMaterial) {
-  Swal.fire({
-    title: 'Edit Bahan Mentah',
-    html: generateMaterialForm(material),
-    showCancelButton: true,
-    confirmButtonText: 'Simpan',
-    preConfirm: () => getFormValues(),
-  }).then((result) => {
+    confirmButtonText: isEdit ? 'Simpan' : 'Tambah',
+    cancelButtonText: 'Batal',
+    preConfirm: () => ({
+      nama_bahan: document.getElementById('nama_bahan').value,
+      jumlah: Number(document.getElementById('jumlah').value),
+      asal_bahan: document.getElementById('asal_bahan').value,
+      kategori: document.getElementById('kategori').value,
+      status: document.getElementById('status').value,
+      id_supplier: Number(document.getElementById('id_supplier').value),
+    }),
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      const index = rawMaterialList.value.findIndex((m) => m.id === material.id);
-      if (index !== -1) {
-        Object.assign(rawMaterialList.value[index], result.value);
-        Swal.fire('Tersimpan!', 'Perubahan telah berhasil disimpan.', 'success');
+      try {
+        const url = isEdit
+          ? `https://sidimasbe.vercel.app/api/ebahan/${material?.id_bahan}`
+          : 'https://sidimasbe.vercel.app/api/addbahan';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        await fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(result.value),
+        });
+
+        Swal.fire('Berhasil!', isEdit ? 'Data diperbarui' : 'Bahan mentah ditambahkan', 'success');
+        fetchMaterials();
+      } catch (error) {
+        Swal.fire('Error', 'Gagal menyimpan data bahan mentah', 'error');
       }
     }
   });
-}
-
-// Fungsi untuk membuka modal tambah
-function openCreateModal() {
-  const newMaterial: RawMaterial = {
-    id: rawMaterialList.value.length + 1,
-    supplier: '',
-    supplierId: 0,
-    material: '',
-    amount: '',
-    source: '',
-    category: '',
-    status: '',
-    date: new Date().toISOString().split('T')[0],
-  };
-
+};
+const showDetailModal = (material: Material) => {
   Swal.fire({
-    title: 'Tambah Bahan Mentah',
-    html: generateMaterialForm(newMaterial, true),
-    showCancelButton: true,
-    confirmButtonText: 'Tambah',
-    preConfirm: () => getFormValues(),
-  }).then((result) => {
-    if (result.isConfirmed) {
-      rawMaterialList.value.push({ id: newMaterial.id, ...result.value });
-      Swal.fire('Berhasil!', 'Bahan mentah berhasil ditambahkan.', 'success');
-    }
+    title: `Detail Bahan Mentah`,
+    html: `
+      <div style="text-align: left; font-size: 14px;">
+        <p><strong>Nama Bahan:</strong> ${material.nama_bahan}</p>
+        <p><strong>Jumlah:</strong> ${material.jumlah} kg</p>
+        <p><strong>Asal Bahan:</strong> ${material.asal_bahan}</p>
+        <p><strong>Kategori:</strong> ${material.kategori}</p>
+        <p><strong>Status:</strong> ${material.status}</p>
+        <p><strong>Supplier:</strong> ${material.supplier.nama_supplier}</p>
+        <p><strong>Tanggal Masuk:</strong> ${new Date(material.created_at).toLocaleDateString()}</p>
+      </div>
+    `,
+    confirmButtonText: 'Tutup',
   });
-}
+};
 
-// Fungsi untuk menghasilkan form HTML
-function generateMaterialForm(material: RawMaterial, isCreate = false) {
-  const supplierOptions = suppliers.map(
-    (supplier) =>
-      `<option value="${supplier.name}" ${
-        supplier.name === material.supplier ? 'selected' : ''
-      }>${supplier.name}</option>`
-  ).join('');
-
-  return `
-    <div class="grid grid-cols-1 gap-4">
-      <div>
-        <label class="block text-sm font-medium">Supplier</label>
-        <select id="form-supplier" class="swal2-select">
-          <option value="">-- Pilih Supplier --</option>
-          ${supplierOptions}
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Bahan Mentah</label>
-        <input id="form-material" type="text" class="swal2-input" value="${material.material}">
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Jumlah (kg)</label>
-        <input id="form-amount" type="number" class="swal2-input" value="${material.amount}">
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Sumber</label>
-        <input id="form-source" type="text" class="swal2-input" value="${material.source}">
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Kategori</label>
-        <select id="form-category" class="swal2-select">
-          ${categories.map((category) => `<option value="${category}" ${
-            category === material.category ? 'selected' : ''
-          }>${category}</option>`).join('')}
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Status</label>
-        <select id="form-status" class="swal2-select">
-          ${statuses.map((status) => `<option value="${status}" ${
-            status === material.status ? 'selected' : ''
-          }>${status}</option>`).join('')}
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Tanggal</label>
-        <input id="form-date" type="date" class="swal2-input" value="${material.date}">
-      </div>
-    </div>
-  `;
-}
-
-// Fungsi untuk menghapus bahan mentah
-function deleteMaterial(material: RawMaterial) {
+// ✅ Hapus Bahan Mentah
+const deleteMaterial = (material: Material) => {
   Swal.fire({
-    title: 'Hapus Bahan Mentah?',
-    text: "Data ini tidak dapat dikembalikan!",
+    title: 'Apakah Anda yakin?',
+    text: "Data ini tidak dapat dikembalikan setelah dihapus!",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: 'Ya, Hapus!',
-    cancelButtonText: 'Batal',
-  }).then((result) => {
+    confirmButtonText: 'Ya, hapus!',
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      rawMaterialList.value = rawMaterialList.value.filter((m) => m.id !== material.id);
-      Swal.fire('Terhapus!', 'Bahan mentah telah dihapus.', 'success');
+      try {
+        await fetch(`https://sidimasbe.vercel.app/api/dbahan/${material.id_bahan}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        Swal.fire('Dihapus!', 'Data bahan mentah telah dihapus.', 'success');
+        fetchMaterials();
+      } catch (error) {
+        Swal.fire('Error', 'Gagal menghapus data bahan mentah', 'error');
+      }
     }
   });
-}
+};
 
-// Fungsi untuk mengambil nilai dari form
-function getFormValues() {
-  return {
-    supplier: (document.getElementById('form-supplier') as HTMLSelectElement).value,
-    material: (document.getElementById('form-material') as HTMLInputElement).value,
-    amount: `${(document.getElementById('form-amount') as HTMLInputElement).value} kg`,
-    source: (document.getElementById('form-source') as HTMLInputElement).value,
-    category: (document.getElementById('form-category') as HTMLSelectElement).value,
-    status: (document.getElementById('form-status') as HTMLSelectElement).value,
-    date: (document.getElementById('form-date') as HTMLInputElement).value,
-  };
-}
+// Fetch data saat komponen dimuat
+onMounted(() => {
+  fetchSuppliers();
+  fetchMaterials();
+});
 </script>
 
 <template>
-  <div>
-    <h3 class="text-3xl font-medium text-gray-700">Dashboard Supply</h3>
-    <div class="mt-4" v-if="currentUser.role === 'admin'">
-      <button @click="openCreateModal" class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
+  <div class="p-6">
+    <h3 class="text-3xl font-bold text-gray-800">Data Bahan Mentah</h3>
+
+    <div class="mt-4">
+      <button @click="openEditModal(null)" class="px-4 py-2 text-white bg-green-600 hover:bg-green-700 rounded">
         Tambah Bahan Mentah
       </button>
     </div>
-    <h4 class="mt-8 text-xl font-medium text-gray-600">Bahan Mentah</h4>
-    <div class="mt-4">
-      <table class="min-w-full border">
-        <thead>
-          <tr class="bg-gray-50">
-            <th class="px-6 py-3 border">Bahan Mentah</th>
-            <th class="px-6 py-3 border">Jumlah (kg)</th>
-            <th class="px-6 py-3 border">Status</th>
-            <th class="px-6 py-3 border">Tanggal</th>
-            <th class="px-6 py-3 border">Aksi</th>
+
+    <div class="mt-8 overflow-x-auto">
+      <table class="min-w-full bg-white border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm">Nama Bahan</th>
+            <th class="px-6 py-3 text-left text-sm">Jumlah (kg)</th>
+            <th class="px-6 py-3 text-left text-sm">Status</th>
+            <th class="px-6 py-3 text-left text-sm">Supplier</th>
+            <th class="px-6 py-3 text-left text-sm">Aksi</th> <!-- ✅ Tambah Kolom Aksi -->
           </tr>
         </thead>
         <tbody>
-          <tr v-for="material in rawMaterialList" :key="material.id" class="hover:bg-gray-100 border-b">
-            <td class="px-6 py-4">{{ material.material }}</td>
-            <td class="px-6 py-4">{{ material.amount }}</td>
+          <tr v-for="material in rawMaterials" :key="material.id_bahan" class="hover:bg-gray-100">
+            <td class="px-6 py-4">{{ material.nama_bahan }}</td>
+            <td class="px-6 py-4">{{ material.jumlah }}</td>
             <td class="px-6 py-4">{{ material.status }}</td>
-            <td class="px-6 py-4">{{ material.date }}</td>
-            <td class="px-6 py-4 flex space-x-2">
-              <button @click="showDetail(material)" class="px-4 py-2 text-white bg-blue-500 rounded">Detail</button>
-              <button v-if="currentUser.role === 'admin'" @click="() => openEditModal(material)" class="px-4 py-2 text-white bg-yellow-500 rounded">Edit</button>
-              <button v-if="currentUser.role === 'admin'" @click="deleteMaterial(material)" class="px-4 py-2 text-white bg-red-500 rounded">Hapus</button>
+            <td class="px-6 py-4">{{ material.supplier.nama_supplier }}</td>
+            <td class="px-6 py-4 flex space-x-2"> 
+              <!-- ✅ Tombol Aksi -->
+              <button @click="showDetailModal(material)" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Detail
+              </button>
+              <button @click="openEditModal(material)" class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                Edit
+              </button>
+              <button @click="deleteMaterial(material)" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                Hapus
+              </button>
             </td>
           </tr>
         </tbody>

@@ -1,38 +1,69 @@
 <script setup>
 import { ref } from "vue";
 import Swal from "sweetalert2";
+import emailjs from "emailjs-com";
 
-let name = ref("");
-let email = ref("");
-let message = ref("");
-let nameError = ref(false);
-let emailError = ref(false);
-let messageError = ref(false);
+const name = ref("");
+const email = ref("");
+const message = ref("");
+const nameError = ref(false);
+const emailError = ref(false);
+const messageError = ref(false);
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+// Konfigurasi EmailJS
+const serviceID = "service_55t3xal";  // Ganti dengan Service ID dari EmailJS
+const templateID = "template_cqjmufm"; // Ganti dengan Template ID dari EmailJS
+const publicKey = "9UUxlsRmfpzTQD4c4";  // Ganti dengan Public Key dari EmailJS
 
 const handleSubmit = () => {
     if (!name.value || !email.value || !emailRegex.test(email.value) || !message.value) {
         nameError.value = !name.value;
         emailError.value = !email.value || !emailRegex.test(email.value);
         messageError.value = !message.value;
-    } else {
-        Swal.fire({
-            icon: "success",
-            title: "Thank You",
-            text: `Thank you, ${name.value}. We have received your message and will get back to you soon.`,
-        });
+        return;
     }
+
+    // Data yang akan dikirim ke EmailJS
+    const emailParams = {
+        name: name.value,
+        email: email.value,
+        message: message.value,
+    };
+
+    // Kirim email dengan EmailJS
+    emailjs.send(serviceID, templateID, emailParams, publicKey)
+        .then(() => {
+            Swal.fire({
+                icon: "success",
+                title: "Terima Kasih!",
+                text: `Pesan Anda telah berhasil dikirim. Kami akan segera menghubungi Anda, ${name.value}.`,
+            });
+
+            // Reset form
+            name.value = "";
+            email.value = "";
+            message.value = "";
+        })
+        .catch((error) => {
+            console.error("Gagal mengirim email:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Gagal Mengirim",
+                text: "Terjadi kesalahan saat mengirim pesan. Silakan coba lagi.",
+            });
+        });
 };
 </script>
 
 <template>
-    <!-- Contact Us Section Start -->
+    <!-- Bagian Kontak Kami -->
     <div id="contact-us" class="bg-theme-primary mt-10 py-16">
         <div class="container w-full lg:w-2/5 mx-auto px-5">
-            <form @submit.prevent="handleSubmit()">
+            <form @submit.prevent="handleSubmit">
                 <div class="space-y-4 mt-8">
-                    <!-- Name Input -->
+                    <!-- Input Nama -->
                     <div>
                         <input 
                             v-model="name" 
@@ -43,7 +74,7 @@ const handleSubmit = () => {
                         <div v-show="nameError" class="text-xs text-red-500">Nama wajib diisi</div>
                     </div>
 
-                    <!-- Email Input -->
+                    <!-- Input Email -->
                     <div>
                         <input 
                             v-model="email" 
@@ -55,7 +86,7 @@ const handleSubmit = () => {
                         <div v-show="emailError" class="text-xs text-red-500">Pastikan email valid</div>
                     </div>
 
-                    <!-- Message Input -->
+                    <!-- Input Pesan -->
                     <div>
                         <textarea 
                             v-model="message" 
@@ -68,11 +99,12 @@ const handleSubmit = () => {
                     </div>
 
                     <div class="text-center mt-4">
-                        <Button type="submit" btn-type="secondary">Kirim Pesan</Button>
+                        <button type="submit" class="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600">
+                            Kirim Pesan
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-    <!-- Contact Us Section End -->
 </template>

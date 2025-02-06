@@ -1,78 +1,86 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Swal from 'sweetalert2';
-import suppliers from '../data/supplier.js';
 
+// Interface Supplier
 interface Supplier {
   id: number;
-  name: string;
-  address: string;
-  contact: string;
-  certifications: string;
-  verified: boolean;
-  picture: string | null;
+  nama_supplier: string;
+  alamat: string;
+  kontak: string;
+  sertifikasi: string;
+  verifikasi: boolean;
 }
 
-// Ambil data user dari localStorage
+// Ambil data user dari localStorage (bukan token!)
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const isAdmin = user.role === 'admin'; // Cek apakah user adalah admin
-const suppliersData = ref<Supplier[]>(suppliers);
+const suppliersData = ref<Supplier[]>([]);
+
+// ✅ Fungsi Fetch Supplier dari API (Menggunakan Cookie)
+const fetchSuppliers = async () => {
+  try {
+    const response = await fetch('https://sidimasbe.vercel.app/api/supl', {
+      method: 'GET',
+      credentials: 'include', // 🔥 WAJIB! Agar cookie login dikirim
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    suppliersData.value = data.map((supplier: any) => ({
+      id: supplier.id,
+      nama_supplier: supplier.nama_supplier,
+      alamat: supplier.alamat,
+      kontak: supplier.kontak,
+      sertifikasi: supplier.sertifikasi,
+      verifikasi: supplier.verifikasi === "true",
+    }));
+  } catch (error) {
+    Swal.fire('Error', `Gagal mengambil data supplier: ${error.message}`, 'error');
+  }
+};
+
 
 // Computed untuk menampilkan data sesuai role
 const filteredSuppliers = computed(() => {
   if (isAdmin) {
-    return suppliersData.value; // Admin dapat melihat semua data
+    return suppliersData.value;
   } else {
-    return suppliersData.value.filter((supplier) => supplier.id === user.id); // Supplier hanya dapat melihat data miliknya
+    return suppliersData.value.filter((supplier) => supplier.id === user.id);
   }
 });
 
-// Fungsi detail modal (akses untuk semua user)
-const showDetailModal = (supplier: Supplier) => {
-  Swal.fire({
-    title: `${supplier.name}`,
-    html: `
-      <div class="text-left">
-        <p><strong>Alamat:</strong> ${supplier.address}</p>
-        <p><strong>Kontak:</strong> ${supplier.contact}</p>
-        <p><strong>Sertifikasi:</strong> ${supplier.certifications}</p>
-        <p><strong>Terverifikasi:</strong> ${supplier.verified ? 'Ya' : 'Tidak'}</p>
-      </div>
-    `,
-    confirmButtonText: 'Tutup',
-  });
-};
-
-// Fungsi untuk membuka modal edit/tambah
+// ✅ Fungsi untuk Menambah atau Mengedit Supplier
 const openEditModal = (supplier: Supplier | null = null) => {
   const isEdit = !!supplier;
   const defaultData = supplier || {
-    id: user.id,
-    name: '',
-    address: '',
-    contact: '',
-    certifications: '',
-    verified: false,
-    picture: null,
+    nama_supplier: '',
+    alamat: '',
+    kontak: '',
+    sertifikasi: '',
+    verifikasi: false,
   };
 
   Swal.fire({
     title: isEdit ? 'Edit Supplier' : 'Tambah Supplier',
     html: `
       <label>Nama</label>
-      <input id="name" value="${defaultData.name}" class="swal2-input" />
+      <input id="nama_supplier" value="${defaultData.nama_supplier}" class="swal2-input" />
       <label>Alamat</label>
-      <input id="address" value="${defaultData.address}" class="swal2-input" />
+      <input id="alamat" value="${defaultData.alamat}" class="swal2-input" />
       <label>Kontak</label>
-      <input id="contact" value="${defaultData.contact}" class="swal2-input" />
+      <input id="kontak" value="${defaultData.kontak}" class="swal2-input" />
       <label>Sertifikasi</label>
-      <input id="certifications" value="${defaultData.certifications}" class="swal2-input" />
+      <input id="sertifikasi" value="${defaultData.sertifikasi}" class="swal2-input" />
       ${
         isAdmin
           ? `<label>Terverifikasi</label>
-             <select id="verified" class="swal2-select">
-               <option value="true" ${defaultData.verified ? 'selected' : ''}>Ya</option>
-               <option value="false" ${!defaultData.verified ? 'selected' : ''}>Tidak</option>
+             <select id="verifikasi" class="swal2-select">
+               <option value="true" ${defaultData.verifikasi ? 'selected' : ''}>Ya</option>
+               <option value="false" ${!defaultData.verifikasi ? 'selected' : ''}>Tidak</option>
              </select>`
           : ''
       }
@@ -80,124 +88,104 @@ const openEditModal = (supplier: Supplier | null = null) => {
     showCancelButton: true,
     confirmButtonText: isEdit ? 'Simpan' : 'Tambah',
     preConfirm: () => {
-      const formData: Partial<Supplier> = {
-        name: (document.getElementById('name') as HTMLInputElement).value,
-        address: (document.getElementById('address') as HTMLInputElement).value,
-        contact: (document.getElementById('contact') as HTMLInputElement).value,
-        certifications: (document.getElementById('certifications') as HTMLInputElement).value,
+      return {
+        nama_supplier: (document.getElementById('nama_supplier') as HTMLInputElement).value,
+        alamat: (document.getElementById('alamat') as HTMLInputElement).value,
+        kontak: (document.getElementById('kontak') as HTMLInputElement).value,
+        sertifikasi: (document.getElementById('sertifikasi') as HTMLInputElement).value,
+        verifikasi: isAdmin
+          ? (document.getElementById('verifikasi') as HTMLSelectElement).value === 'true'
+          : defaultData.verifikasi,
       };
-
-      if (isAdmin) {
-        formData.verified = (document.getElementById('verified') as HTMLSelectElement).value === 'true';
-      }
-
-      return formData;
     },
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      if (isEdit) {
-        const index = suppliersData.value.findIndex((s) => s.id === supplier?.id);
-        if (index !== -1) {
-          suppliersData.value[index] = { ...suppliersData.value[index], ...result.value };
-          Swal.fire('Tersimpan!', 'Data supplier berhasil diperbarui.', 'success');
-        }
-      } else {
-        // Batasi supplier hanya dapat membuat data sekali
-        const supplierExists = suppliersData.value.some((s) => s.id === user.id);
-        if (!isAdmin && supplierExists) {
-          Swal.fire('Gagal!', 'Anda hanya dapat membuat satu profil supplier.', 'error');
-        } else {
-          suppliersData.value.push({ id: defaultData.id, ...result.value });
-          Swal.fire('Ditambahkan!', 'Supplier baru berhasil ditambahkan.', 'success');
-        }
+      try {
+        const url = isEdit
+          ? `https://sidimasbe.vercel.app/api/esupl/${supplier?.id}`
+          : 'https://sidimasbe.vercel.app/api/asupl';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // 🔥 Pastikan cookie dikirim
+          body: JSON.stringify(result.value),
+        });
+
+        Swal.fire('Berhasil!', isEdit ? 'Data diperbarui' : 'Supplier ditambahkan', 'success');
+        fetchSuppliers();
+      } catch (error) {
+        Swal.fire('Error', 'Gagal menyimpan data supplier', 'error');
       }
     }
   });
 };
 
-// Fungsi untuk menghapus supplier (hanya admin)
+// ✅ Fungsi untuk Menghapus Supplier
 const deleteSupplier = (supplier: Supplier) => {
-  if (!isAdmin) return; // Batasi akses
+  if (!isAdmin) return;
   Swal.fire({
     title: 'Apakah Anda yakin?',
     text: "Data ini tidak dapat dikembalikan setelah dihapus!",
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Ya, hapus!',
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      suppliersData.value = suppliersData.value.filter((s) => s.id !== supplier.id);
-      Swal.fire('Dihapus!', 'Data supplier telah dihapus.', 'success');
+      try {
+        await fetch(`https://sidimasbe.vercel.app/api/dsupl/${supplier.id}`, {
+          method: 'DELETE',
+          credentials: 'include', // 🔥 Pastikan cookie dikirim
+        });
+        Swal.fire('Dihapus!', 'Data supplier telah dihapus.', 'success');
+        fetchSuppliers();
+      } catch (error) {
+        Swal.fire('Error', 'Gagal menghapus data supplier', 'error');
+      }
     }
   });
 };
+
+// Fetch data supplier saat komponen dimuat
+onMounted(fetchSuppliers);
 </script>
 
 <template>
   <div>
     <h3 class="text-3xl font-medium text-gray-700">Profil Supplier</h3>
 
-    <!-- Tombol Tambah Supplier -->
-    <div v-if="isAdmin || !suppliersData.some((s) => s.id === user.id)" class="mt-4">
+    <div v-if="isAdmin" class="mt-4">
       <button @click="openEditModal(null)" class="px-4 py-2 text-white bg-green-500 rounded">
         Tambah Supplier
       </button>
     </div>
 
-    <!-- Daftar Supplier -->
     <div class="mt-8">
-      <h4 class="text-xl font-medium text-gray-600">Daftar Supplier</h4>
-      <div class="mt-4 overflow-x-auto">
-        <table class="min-w-full bg-white border">
-          <thead>
-            <tr class="bg-gray-50">
-              <th class="px-6 py-3 text-left text-sm">Nama</th>
-              <th class="px-6 py-3 text-left text-sm">Kontak</th>
-              <th class="px-6 py-3 text-left text-sm">Terverifikasi</th>
-              <th class="px-6 py-3 text-left text-sm">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="supplier in filteredSuppliers" :key="supplier.id" class="hover:bg-gray-100">
-              <td class="px-6 py-4">{{ supplier.name }}</td>
-              <td class="px-6 py-4">{{ supplier.contact }}</td>
-              <td class="px-6 py-4">
-                <span
-                  class="px-2 py-1 rounded"
-                  :class="supplier.verified ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
-                >
-                  {{ supplier.verified ? 'Ya' : 'Tidak' }}
-                </span>
-              </td>
-              <td class="px-6 py-4 flex space-x-2">
-                <!-- Tombol Detail -->
-                <button
-                  @click="showDetailModal(supplier)"
-                  class="px-4 py-2 text-white bg-blue-500 rounded"
-                >
-                  Detail
-                </button>
-                <!-- Tombol Edit -->
-                <button
-                  v-if="isAdmin || supplier.id === user.id"
-                  @click="openEditModal(supplier)"
-                  class="px-4 py-2 text-white bg-yellow-500 rounded"
-                >
-                  Edit
-                </button>
-                <!-- Tombol Hapus -->
-                <button
-                  v-if="isAdmin"
-                  @click="deleteSupplier(supplier)"
-                  class="px-4 py-2 text-white bg-red-500 rounded"
-                >
-                  Hapus
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="min-w-full bg-white border">
+        <thead>
+          <tr class="bg-gray-50">
+            <th>Nama</th>
+            <th>Kontak</th>
+            <th>Terverifikasi</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="supplier in filteredSuppliers" :key="supplier.id">
+            <td>{{ supplier.nama_supplier }}</td>
+            <td>{{ supplier.kontak }}</td>
+            <td>{{ supplier.verifikasi ? 'Ya' : 'Tidak' }}</td>
+            <td>
+              <button @click="showDetailModal(supplier)">Detail</button>
+              <button v-if="isAdmin" @click="openEditModal(supplier)">Edit</button>
+              <button v-if="isAdmin" @click="deleteSupplier(supplier)">Hapus</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>

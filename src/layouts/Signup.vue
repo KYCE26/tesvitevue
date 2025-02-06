@@ -15,16 +15,16 @@
             <form @submit.prevent="registerUser" class="space-y-4 md:space-y-6">
               <div>
                 <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                  <i class="fa-solid fa-user mr-2"></i> Name
+                  <i class="fa-solid fa-user mr-2"></i> Nama
                 </label>
-                <input v-model="name" type="text" id="name" class="input-field" placeholder="Your Name" required>
+                <input v-model="name" type="text" id="name" class="input-field" placeholder="Nama Anda" required>
               </div>
 
               <div>
                 <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                   <i class="fa-regular fa-envelope mr-2"></i> Email
                 </label>
-                <input v-model="email" type="email" id="email" class="input-field" placeholder="Your Email" required>
+                <input v-model="email" type="email" id="email" class="input-field" placeholder="Email Anda" required>
               </div>
 
               <div>
@@ -43,11 +43,11 @@
               <input type="hidden" v-model="role">
 
               <button type="submit" class="btn-primary">
-                Sign Up
+                Daftar
               </button>
 
               <p class="text-sm font-light text-gray-500 dark:text-gray-400 text-center">
-                Already have an account? <router-link to="/login" class="font-medium text-primary-600 hover:underline dark:text-primary-500">Login here</router-link>
+                Sudah punya akun? <router-link to="/login" class="font-medium text-primary-600 hover:underline dark:text-primary-500">Masuk di sini</router-link>
               </p>
             </form>
           </div>
@@ -63,7 +63,7 @@
 <script>
 import Header from "./Header.vue";
 import Footer from "./Footer.vue";
-import { loginData } from "../data/login.js"; // Simpan data di lokal storage
+import Swal from "sweetalert2"; // Notifikasi
 
 export default {
   components: {
@@ -83,24 +83,42 @@ export default {
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword;
     },
-    registerUser() {
-      const newUser = {
-        id: loginData.length + 1, // ID otomatis
-        email: this.email,
-        password: this.password,
-        role: this.role, // Role tetap supplier
-      };
+    async registerUser() {
+      try {
+        const response = await fetch("https://sidimasbe.vercel.app/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: this.name,
+            email: this.email,
+            password: this.password,
+            role: this.role,
+          }),
+        });
 
-      // Simpan ke localStorage (simulasi database)
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
+        const data = await response.json();
 
-      console.log("User registered:", newUser);
-      alert("Registration successful! You can now login.");
+        if (response.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "Registrasi Berhasil!",
+            text: "Akun Anda telah terdaftar, silakan login.",
+          });
 
-      // Redirect ke login
-      this.$router.push("/login");
+          // Redirect ke halaman login setelah sukses
+          this.$router.push("/login");
+        } else {
+          throw new Error(data.message || "Registrasi gagal. Silakan coba lagi.");
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: error.message,
+        });
+      }
     },
   },
 };

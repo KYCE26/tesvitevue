@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
+import axios from "axios";
 import Swal from "sweetalert2";
-import emailjs from "emailjs-com";
 
 const name = ref("");
 const email = ref("");
@@ -10,55 +10,64 @@ const nameError = ref(false);
 const emailError = ref(false);
 const messageError = ref(false);
 
-const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const accessToken = "ya29.a0AXeO80Q4Fgcr1YyMDtwJDykzO2KPAWfQrv8gg5bTZuSL1Zy-LeOPWQgMv6L3x_16OR1BbM_zNjZNMaHwYeb_uvm3QnmUJtRtBaQWjXK7qXfNLPqY9RqaGO9Lk3kiGD2aUKBAMcstC_mjtisKcO2TfA_2AmqtE0RciUgGqbs_aCgYKAX8SARASFQHGX2Mijci4OiCE7oWgpKTXWc5CFw0175"; // Ganti dengan Access Token dari OAuth Playground
 
-// Konfigurasi EmailJS
-const serviceID = "service_55t3xal";  // Ganti dengan Service ID dari EmailJS
-const templateID = "template_cqjmufm"; // Ganti dengan Template ID dari EmailJS
-const publicKey = "9UUxlsRmfpzTQD4c4";  // Ganti dengan Public Key dari EmailJS
-
-const handleSubmit = () => {
-    if (!name.value || !email.value || !emailRegex.test(email.value) || !message.value) {
+const handleSubmit = async () => {
+    if (!name.value || !email.value || !message.value) {
         nameError.value = !name.value;
-        emailError.value = !email.value || !emailRegex.test(email.value);
+        emailError.value = !email.value;
         messageError.value = !message.value;
         return;
     }
 
-    // Data yang akan dikirim ke EmailJS
-    const emailParams = {
-        name: name.value,
-        email: email.value,
-        message: message.value,
-    };
+    // Format email dalam RFC 2822
+    const emailContent = [
+        `From: "Your Name" <muhammad26rifky06@gmail.com>`,
+        `To: "Recipient Name" <recipient-email@gmail.com>`,
+        `Subject: Pesan dari ${name.value}`,
+        `Content-Type: text/plain; charset="UTF-8"`,
+        ``,
+        `${message.value}`,
+    ].join("\n");
 
-    // Kirim email dengan EmailJS
-    emailjs.send(serviceID, templateID, emailParams, publicKey)
-        .then(() => {
-            Swal.fire({
-                icon: "success",
-                title: "Terima Kasih!",
-                text: `Pesan Anda telah berhasil dikirim. Kami akan segera menghubungi Anda, ${name.value}.`,
-            });
+    // Encode email dalam Base64
+    const encodedEmail = btoa(emailContent).replace(/\+/g, "-").replace(/\//g, "_");
 
-            // Reset form
-            name.value = "";
-            email.value = "";
-            message.value = "";
-        })
-        .catch((error) => {
-            console.error("Gagal mengirim email:", error);
-            Swal.fire({
-                icon: "error",
-                title: "Gagal Mengirim",
-                text: "Terjadi kesalahan saat mengirim pesan. Silakan coba lagi.",
-            });
+    try {
+        const response = await axios.post(
+            "https://www.googleapis.com/gmail/v1/users/me/messages/send",
+            { raw: encodedEmail },
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+
+        Swal.fire({
+            icon: "success",
+            title: "Pesan Terkirim!",
+            text: `Terima kasih, ${name.value}. Kami akan segera menghubungi Anda.`,
         });
+
+        // Reset form setelah sukses
+        name.value = "";
+        email.value = "";
+        message.value = "";
+
+    } catch (error) {
+        console.error("Gagal mengirim email:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Gagal Mengirim",
+            text: "Terjadi kesalahan saat mengirim pesan. Silakan coba lagi.",
+        });
+    }
 };
 </script>
 
 <template>
-    <!-- Bagian Kontak Kami -->
     <div id="contact-us" class="bg-theme-primary mt-10 py-16">
         <div class="container w-full lg:w-2/5 mx-auto px-5">
             <form @submit.prevent="handleSubmit">
@@ -78,7 +87,6 @@ const handleSubmit = () => {
                     <div>
                         <input 
                             v-model="email" 
-                            @input="emailError = false" 
                             class="w-full py-3 px-5 text-sm text-gray-600 border-0 shadow-md rounded focus:ring-4 focus:ring-blue-300"
                             type="email" 
                             placeholder="Email Anda" 
@@ -90,7 +98,6 @@ const handleSubmit = () => {
                     <div>
                         <textarea 
                             v-model="message" 
-                            @input="messageError = false" 
                             class="w-full py-3 px-5 text-sm text-gray-600 border-0 shadow-md rounded focus:ring-4 focus:ring-blue-300"
                             placeholder="Pesan Anda" 
                             rows="5"

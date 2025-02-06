@@ -109,10 +109,6 @@ const createPorsiMenu = () => {
         return null;
       }
 
-      if (jumlah_porsi > selectedMenu.jumlah_porsi) {
-        Swal.showValidationMessage(`Jumlah porsi tidak boleh lebih dari stok tersedia (${selectedMenu.jumlah_porsi}).`);
-        return null;
-      }
 
       return { id_menu, jumlah_porsi };
     }

@@ -33,13 +33,13 @@ const showDetailModal = (supplier: Supplier) => {
     title: `${supplier.name}`,
     html: `
       <div class="text-left">
-        <p><strong>Address:</strong> ${supplier.address}</p>
-        <p><strong>Contact:</strong> ${supplier.contact}</p>
-        <p><strong>Certifications:</strong> ${supplier.certifications}</p>
-        <p><strong>Verified:</strong> ${supplier.verified ? 'Yes' : 'No'}</p>
+        <p><strong>Alamat:</strong> ${supplier.address}</p>
+        <p><strong>Kontak:</strong> ${supplier.contact}</p>
+        <p><strong>Sertifikasi:</strong> ${supplier.certifications}</p>
+        <p><strong>Terverifikasi:</strong> ${supplier.verified ? 'Ya' : 'Tidak'}</p>
       </div>
     `,
-    confirmButtonText: 'Close',
+    confirmButtonText: 'Tutup',
   });
 };
 
@@ -57,28 +57,28 @@ const openEditModal = (supplier: Supplier | null = null) => {
   };
 
   Swal.fire({
-    title: isEdit ? 'Edit Supplier' : 'Add Supplier',
+    title: isEdit ? 'Edit Supplier' : 'Tambah Supplier',
     html: `
-      <label>Name</label>
+      <label>Nama</label>
       <input id="name" value="${defaultData.name}" class="swal2-input" />
-      <label>Address</label>
+      <label>Alamat</label>
       <input id="address" value="${defaultData.address}" class="swal2-input" />
-      <label>Contact</label>
+      <label>Kontak</label>
       <input id="contact" value="${defaultData.contact}" class="swal2-input" />
-      <label>Certifications</label>
+      <label>Sertifikasi</label>
       <input id="certifications" value="${defaultData.certifications}" class="swal2-input" />
       ${
         isAdmin
-          ? `<label>Verified</label>
+          ? `<label>Terverifikasi</label>
              <select id="verified" class="swal2-select">
-               <option value="true" ${defaultData.verified ? 'selected' : ''}>Yes</option>
-               <option value="false" ${!defaultData.verified ? 'selected' : ''}>No</option>
+               <option value="true" ${defaultData.verified ? 'selected' : ''}>Ya</option>
+               <option value="false" ${!defaultData.verified ? 'selected' : ''}>Tidak</option>
              </select>`
           : ''
       }
     `,
     showCancelButton: true,
-    confirmButtonText: isEdit ? 'Save' : 'Add',
+    confirmButtonText: isEdit ? 'Simpan' : 'Tambah',
     preConfirm: () => {
       const formData: Partial<Supplier> = {
         name: (document.getElementById('name') as HTMLInputElement).value,
@@ -99,16 +99,16 @@ const openEditModal = (supplier: Supplier | null = null) => {
         const index = suppliersData.value.findIndex((s) => s.id === supplier?.id);
         if (index !== -1) {
           suppliersData.value[index] = { ...suppliersData.value[index], ...result.value };
-          Swal.fire('Saved!', 'Supplier updated successfully.', 'success');
+          Swal.fire('Tersimpan!', 'Data supplier berhasil diperbarui.', 'success');
         }
       } else {
         // Batasi supplier hanya dapat membuat data sekali
         const supplierExists = suppliersData.value.some((s) => s.id === user.id);
         if (!isAdmin && supplierExists) {
-          Swal.fire('Error', 'You can only create one supplier profile.', 'error');
+          Swal.fire('Gagal!', 'Anda hanya dapat membuat satu profil supplier.', 'error');
         } else {
           suppliersData.value.push({ id: defaultData.id, ...result.value });
-          Swal.fire('Added!', 'New supplier added successfully.', 'success');
+          Swal.fire('Ditambahkan!', 'Supplier baru berhasil ditambahkan.', 'success');
         }
       }
     }
@@ -119,15 +119,15 @@ const openEditModal = (supplier: Supplier | null = null) => {
 const deleteSupplier = (supplier: Supplier) => {
   if (!isAdmin) return; // Batasi akses
   Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
+    title: 'Apakah Anda yakin?',
+    text: "Data ini tidak dapat dikembalikan setelah dihapus!",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!',
+    confirmButtonText: 'Ya, hapus!',
   }).then((result) => {
     if (result.isConfirmed) {
       suppliersData.value = suppliersData.value.filter((s) => s.id !== supplier.id);
-      Swal.fire('Deleted!', 'Supplier deleted.', 'success');
+      Swal.fire('Dihapus!', 'Data supplier telah dihapus.', 'success');
     }
   });
 };
@@ -135,26 +135,26 @@ const deleteSupplier = (supplier: Supplier) => {
 
 <template>
   <div>
-    <h3 class="text-3xl font-medium text-gray-700">Supplier Profiles</h3>
+    <h3 class="text-3xl font-medium text-gray-700">Profil Supplier</h3>
 
-    <!-- Add Supplier Button -->
+    <!-- Tombol Tambah Supplier -->
     <div v-if="isAdmin || !suppliersData.some((s) => s.id === user.id)" class="mt-4">
       <button @click="openEditModal(null)" class="px-4 py-2 text-white bg-green-500 rounded">
-        Add Supplier
+        Tambah Supplier
       </button>
     </div>
 
-    <!-- Supplier List -->
+    <!-- Daftar Supplier -->
     <div class="mt-8">
-      <h4 class="text-xl font-medium text-gray-600">Supplier List</h4>
+      <h4 class="text-xl font-medium text-gray-600">Daftar Supplier</h4>
       <div class="mt-4 overflow-x-auto">
         <table class="min-w-full bg-white border">
           <thead>
             <tr class="bg-gray-50">
-              <th class="px-6 py-3 text-left text-sm">Name</th>
-              <th class="px-6 py-3 text-left text-sm">Contact</th>
-              <th class="px-6 py-3 text-left text-sm">Verified</th>
-              <th class="px-6 py-3 text-left text-sm">Actions</th>
+              <th class="px-6 py-3 text-left text-sm">Nama</th>
+              <th class="px-6 py-3 text-left text-sm">Kontak</th>
+              <th class="px-6 py-3 text-left text-sm">Terverifikasi</th>
+              <th class="px-6 py-3 text-left text-sm">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -166,18 +166,18 @@ const deleteSupplier = (supplier: Supplier) => {
                   class="px-2 py-1 rounded"
                   :class="supplier.verified ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
                 >
-                  {{ supplier.verified ? 'Yes' : 'No' }}
+                  {{ supplier.verified ? 'Ya' : 'Tidak' }}
                 </span>
               </td>
               <td class="px-6 py-4 flex space-x-2">
-                <!-- Detail Button -->
+                <!-- Tombol Detail -->
                 <button
                   @click="showDetailModal(supplier)"
                   class="px-4 py-2 text-white bg-blue-500 rounded"
                 >
                   Detail
                 </button>
-                <!-- Edit Button -->
+                <!-- Tombol Edit -->
                 <button
                   v-if="isAdmin || supplier.id === user.id"
                   @click="openEditModal(supplier)"
@@ -185,13 +185,13 @@ const deleteSupplier = (supplier: Supplier) => {
                 >
                   Edit
                 </button>
-                <!-- Delete Button -->
+                <!-- Tombol Hapus -->
                 <button
                   v-if="isAdmin"
                   @click="deleteSupplier(supplier)"
                   class="px-4 py-2 text-white bg-red-500 rounded"
                 >
-                  Delete
+                  Hapus
                 </button>
               </td>
             </tr>

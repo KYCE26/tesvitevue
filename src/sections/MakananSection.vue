@@ -27,7 +27,7 @@ import menuData from '../data/menu.js'; // Import data menu
         <!-- Informasi Tambahan -->
         <div class="mt-4 text-sm text-gray-500">
           <p><strong>Total Stock:</strong> {{ menu.stock }}</p>
-          <p><strong>Date:</strong> {{ menu.date }}</p>
+          <p><strong>Tanggal:</strong> {{ menu.date }}</p>
         </div>
       </div>
     </div>

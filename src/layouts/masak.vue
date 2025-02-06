@@ -32,52 +32,52 @@ const createDish = () => {
   if (!isAdmin) return; // Batasi akses hanya untuk admin
 
   Swal.fire({
-  title: 'Add New Dish',
-  html: `
-    <div class="flex flex-col items-center space-y-4" style="max-width: 400px; margin: auto;">
-      <div class="w-full">
-        <label class="block text-sm font-medium text-center">Dish Name</label>
-        <input id="dish-name" type="text" class="swal2-input" style="max-width: 100%; text-align: center;" placeholder="Enter dish name" />
-      </div>
-      <div class="w-full">
-        <label class="block text-sm font-medium text-center mt-2">Category</label>
-        <input id="dish-category" type="text" class="swal2-input" style="max-width: 100%; text-align: center;" placeholder="Enter category" />
-      </div>
-      <div class="w-full">
-        <label class="block text-sm font-medium text-center mt-4">Select Raw Materials</label>
-        <div id="raw-material-container" class="grid grid-cols-1 gap-y-3 mt-2 justify-center" style="width: 100%;">
-          ${rawMaterialList.value
-            .map(
-              (raw) => `
-              <div class="flex items-center justify-between space-x-2">
-                <div class="flex items-center">
-                  <input type="checkbox" class="raw-material-checkbox" value="${raw.id}" />
-                  <span class="ml-2">${raw.material} (${raw.amount})</span>
+    title: 'Tambah Masakan Baru',
+    html: `
+      <div class="flex flex-col items-center space-y-4" style="max-width: 400px; margin: auto;">
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center">Nama Masakan</label>
+          <input id="dish-name" type="text" class="swal2-input" placeholder="Masukkan nama masakan" />
+        </div>
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center mt-2">Kategori</label>
+          <input id="dish-category" type="text" class="swal2-input" placeholder="Masukkan kategori" />
+        </div>
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center mt-4">Pilih Bahan Mentah</label>
+          <div id="raw-material-container" class="grid grid-cols-1 gap-y-3 mt-2 justify-center">
+            ${rawMaterialList.value
+              .map(
+                (raw) => `
+                <div class="flex items-center justify-between space-x-2">
+                  <div class="flex items-center">
+                    <input type="checkbox" class="raw-material-checkbox" value="${raw.id}" />
+                    <span class="ml-2">${raw.material} (${raw.amount} kg)</span>
+                  </div>
+                  <input
+                    type="number"
+                    class="raw-material-amount border rounded px-2"
+                    style="width: 100px;"
+                    placeholder="Jumlah"
+                    disabled
+                  />
                 </div>
-                <input
-                  type="number"
-                  class="raw-material-amount border rounded px-2"
-                  style="width: 100px;"
-                  placeholder="Amount"
-                  disabled
-                />
-              </div>
-            `
-            )
-            .join('')}
+              `
+              )
+              .join('')}
+          </div>
+        </div>
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center mt-4">Status</label>
+          <select id="dish-status" class="swal2-select">
+            <option value="Tersedia">Tersedia</option>
+            <option value="Belum">Belum</option>
+          </select>
         </div>
       </div>
-      <div class="w-full">
-        <label class="block text-sm font-medium text-center mt-4">Status</label>
-        <select id="dish-status" class="swal2-select" style="text-align-last: center;">
-          <option value="Tersedia">Tersedia</option>
-          <option value="Belum">Belum</option>
-        </select>
-      </div>
-    </div>
-  `,
-  showCancelButton: true,
-  confirmButtonText: 'Add',
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Tambah',
     didOpen: () => {
       const checkboxes = document.querySelectorAll('.raw-material-checkbox');
       checkboxes.forEach((checkbox, index) => {
@@ -102,7 +102,7 @@ const createDish = () => {
           const amount = parseFloat(amountInput.value);
 
           if (!rawMaterial || isNaN(amount) || amount <= 0) {
-            Swal.showValidationMessage(`Invalid amount for ${rawMaterial?.material || 'selected material'}`);
+            Swal.showValidationMessage(`Jumlah tidak valid untuk ${rawMaterial?.material || 'bahan terpilih'}`);
             return null;
           }
 
@@ -111,7 +111,7 @@ const createDish = () => {
       });
 
       if (!name || !category || selectedMaterials.length === 0) {
-        Swal.showValidationMessage('Please fill in all fields and select at least one raw material');
+        Swal.showValidationMessage('Harap isi semua kolom dan pilih setidaknya satu bahan mentah');
         return null;
       }
 
@@ -131,53 +131,159 @@ const createDish = () => {
         date: new Date().toISOString().split('T')[0],
       });
 
-      Swal.fire('Added!', 'New dish has been successfully added.', 'success');
+      Swal.fire('Berhasil!', 'Masakan baru berhasil ditambahkan.', 'success');
     }
   });
 };
 
 // Fungsi untuk menampilkan detail masakan (Akses Semua User)
 const showDishDetails = (dish: CookedDish) => {
-  const materialsDetails = dish.materials
-    .map((item) => `${item.amount} (${item.material})`)
-    .join(', ');
-
   Swal.fire({
     title: dish.name,
     html: `
       <div class="text-left">
-        <p><strong>Category:</strong> ${dish.category}</p>
-        <p><strong>Amount:</strong> ${materialsDetails}</p>
+        <p><strong>Kategori:</strong> ${dish.category}</p>
+        <p><strong>Bahan Mentah:</strong> ${dish.materials.map(m => `${m.amount} (${m.material})`).join(', ')}</p>
         <p><strong>Status:</strong> ${dish.status}</p>
-        <p><strong>Date:</strong> ${dish.date}</p>
+        <p><strong>Tanggal:</strong> ${dish.date}</p>
       </div>
     `,
-    confirmButtonText: 'Close',
+    showCancelButton: true,
+    cancelButtonText: 'Tutup',
+    showConfirmButton: isAdmin,  // Tombol Edit hanya muncul jika admin
+    confirmButtonText: 'Edit',
+  }).then((result) => {
+    if (result.isConfirmed && isAdmin) {
+      openEditDishModal(dish);
+    }
   });
 };
+
+
 
 // Fungsi untuk menghapus masakan (Hanya Admin)
 const deleteDish = (dish: CookedDish) => {
   if (!isAdmin) return; // Batasi akses hanya untuk admin
 
   Swal.fire({
-    title: 'Are you sure?',
-    text: `Delete "${dish.name}"?`,
+    title: 'Hapus Masakan?',
+    text: `Apakah Anda yakin ingin menghapus "${dish.name}"?`,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!',
+    confirmButtonText: 'Ya, Hapus!',
+    cancelButtonText: 'Batal',
   }).then((result) => {
     if (result.isConfirmed) {
-      // Hapus masakan dari daftar
       const index = cookedDishList.value.findIndex((d) => d.id === dish.id);
       if (index !== -1) {
         cookedDishList.value.splice(index, 1);
       }
 
-      Swal.fire('Deleted!', 'Dish has been deleted.', 'success');
+      Swal.fire('Terhapus!', 'Masakan telah dihapus.', 'success');
     }
   });
 };
+const openEditDishModal = (dish: CookedDish) => {
+  Swal.fire({
+    title: 'Edit Masakan',
+    html: `
+      <div class="flex flex-col items-center space-y-4" style="max-width: 400px; margin: auto;">
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center">Nama Masakan</label>
+          <input id="edit-name" type="text" class="swal2-input" value="${dish.name}" />
+        </div>
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center mt-2">Kategori</label>
+          <input id="edit-category" type="text" class="swal2-input" value="${dish.category}" />
+        </div>
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center mt-4">Pilih Bahan Mentah</label>
+          <div id="raw-material-container" class="grid grid-cols-1 gap-y-3 mt-2 justify-center">
+            ${rawMaterialList.value
+              .map((raw) => {
+                const selectedMaterial = dish.materials.find(m => m.material === raw.material);
+                return `
+                  <div class="flex items-center justify-between space-x-2">
+                    <div class="flex items-center">
+                      <input type="checkbox" class="raw-material-checkbox" value="${raw.id}" ${selectedMaterial ? 'checked' : ''} />
+                      <span class="ml-2">${raw.material} (${raw.amount} kg)</span>
+                    </div>
+                    <input
+                      type="number"
+                      class="raw-material-amount border rounded px-2"
+                      style="width: 100px;"
+                      placeholder="Jumlah"
+                      value="${selectedMaterial ? selectedMaterial.amount.replace(' kg', '') : ''}"
+                      ${selectedMaterial ? '' : 'disabled'}
+                    />
+                  </div>
+                `;
+              })
+              .join('')}
+          </div>
+        </div>
+        <div class="w-full">
+          <label class="block text-sm font-medium text-center mt-4">Status</label>
+          <select id="edit-status" class="swal2-select">
+            <option value="Tersedia" ${dish.status === 'Tersedia' ? 'selected' : ''}>Tersedia</option>
+            <option value="Belum" ${dish.status === 'Belum' ? 'selected' : ''}>Belum</option>
+          </select>
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Simpan',
+    didOpen: () => {
+      const checkboxes = document.querySelectorAll('.raw-material-checkbox');
+      checkboxes.forEach((checkbox, index) => {
+        checkbox.addEventListener('change', () => {
+          const amountInput = document.querySelectorAll('.raw-material-amount')[index] as HTMLInputElement;
+          amountInput.disabled = !(checkbox as HTMLInputElement).checked;
+        });
+      });
+    },
+    preConfirm: () => {
+      const name = (document.getElementById('edit-name') as HTMLInputElement).value;
+      const category = (document.getElementById('edit-category') as HTMLInputElement).value;
+      const status = (document.getElementById('edit-status') as HTMLSelectElement).value;
+
+      const selectedMaterials: { material: string; amount: string }[] = [];
+      document.querySelectorAll('.raw-material-checkbox').forEach((checkbox, index) => {
+        if ((checkbox as HTMLInputElement).checked) {
+          const rawMaterial = rawMaterialList.value.find(
+            (raw) => raw.id === parseInt((checkbox as HTMLInputElement).value, 10)
+          );
+          const amountInput = document.querySelectorAll('.raw-material-amount')[index] as HTMLInputElement;
+          const amount = parseFloat(amountInput.value);
+
+          if (!rawMaterial || isNaN(amount) || amount <= 0) {
+            Swal.showValidationMessage(`Jumlah tidak valid untuk ${rawMaterial?.material || 'bahan terpilih'}`);
+            return null;
+          }
+
+          selectedMaterials.push({ material: rawMaterial.material, amount: `${amount} kg` });
+        }
+      });
+
+      if (!name || !category || selectedMaterials.length === 0) {
+        Swal.showValidationMessage('Harap isi semua kolom dan pilih setidaknya satu bahan mentah');
+        return null;
+      }
+
+      return { name, category, status, materials: selectedMaterials };
+    },
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const index = cookedDishList.value.findIndex(d => d.id === dish.id);
+      if (index !== -1) {
+        cookedDishList.value[index] = { ...cookedDishList.value[index], ...result.value };
+      }
+      Swal.fire('Berhasil!', 'Masakan berhasil diperbarui.', 'success');
+    }
+  });
+};
+
+
 </script>
 
 <template>
@@ -187,45 +293,27 @@ const deleteDish = (dish: CookedDish) => {
       v-if="isAdmin"
       @click="createDish"
       class="fixed bottom-6 right-6 w-16 h-16 bg-green-500 text-white text-4xl font-bold rounded-full shadow-xl hover:bg-green-600"
-      title="Add Dish"
+      title="Tambah Masakan"
     >
       +
     </button>
 
     <!-- Daftar Masakan -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div
-        v-for="dish in cookedDishList"
-        :key="dish.id"
-        class="bg-white shadow-md rounded-lg p-4"
-      >
+      <div v-for="dish in cookedDishList" :key="dish.id" class="bg-white shadow-md rounded-lg p-4">
         <h3 class="text-lg font-bold">{{ dish.name }}</h3>
-        <p class="text-sm text-gray-600">Category: {{ dish.category }}</p>
+        <p class="text-sm text-gray-600">Kategori: {{ dish.category }}</p>
         <p class="text-sm text-gray-600">
-          Amount:
+          Bahan Mentah:
           <span v-for="(material, index) in dish.materials" :key="index">
             {{ material.amount }} ({{ material.material }})<span v-if="index < dish.materials.length - 1">, </span>
           </span>
         </p>
         <p class="text-sm text-gray-600">Status: {{ dish.status }}</p>
-        <p class="text-sm text-gray-600">Date: {{ dish.date }}</p>
+        <p class="text-sm text-gray-600">Tanggal: {{ dish.date }}</p>
         <div class="mt-4 flex justify-between">
-          <!-- Detail Button (Akses Semua User) -->
-          <button
-            @click="showDishDetails(dish)"
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Detail
-          </button>
-
-          <!-- Delete Button (Hanya Admin) -->
-          <button
-            v-if="isAdmin"
-            @click="deleteDish(dish)"
-            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            Delete
-          </button>
+          <button @click="showDishDetails(dish)" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Detail</button>
+          <button v-if="isAdmin" @click="deleteDish(dish)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Hapus</button>
         </div>
       </div>
     </div>

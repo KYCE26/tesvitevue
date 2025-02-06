@@ -2,87 +2,77 @@
 import { ref, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 
-// Interface Bahan Mentah
-interface Material {
-  id_bahan: number;
-  nama_bahan: string;
-  jumlah: number;
-  asal_bahan: string;
-  kategori: string;
-  status: string;
-  created_at: string;
-  supplier: {
-    id_supplier: number;
-    nama_supplier: string;
-  };
-}
-
-// Interface Supplier
-interface Supplier {
-  id_supplier: number;
-  nama_supplier: string;
-}
-
-// ✅ Ambil token dari localStorage
+// ✅ API Base URL & Token
+const API_URL = "https://sidimasbe.vercel.app/api";
 const token = localStorage.getItem('token');
-const rawMaterials = ref<Material[]>([]);
-const suppliersList = ref<Supplier[]>([]);
+
+// ✅ Ambil role dari user yang login
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+const isAdmin = currentUser?.role === 'admin';
+const isSupplier = currentUser?.role === 'supplier';
+
+// ✅ State untuk menyimpan daftar bahan mentah & supplier
+const rawMaterials = ref([]);
+const suppliersList = ref([]);
 
 // ✅ Fetch Data Supplier
 const fetchSuppliers = async () => {
   try {
-    const response = await fetch('https://sidimasbe.vercel.app/api/supl', {
-      method: 'GET',
+    const response = await fetch(`${API_URL}/supl`, {
+      method: "GET",
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
 
-    if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+    if (!response.ok) throw new Error(`Gagal mengambil data supplier: ${response.status}`);
 
     const data = await response.json();
-    if (data.Suppliers && Array.isArray(data.Suppliers)) {
-      suppliersList.value = data.Suppliers.map(s => ({
-        id_supplier: s.id_supplier,
-        nama_supplier: s.nama_supplier,
-      }));
-    }
+    suppliersList.value = data.Suppliers || [];
   } catch (error) {
-    Swal.fire('Error', `Gagal mengambil data supplier: ${error.message}`, 'error');
+    Swal.fire("Error", error.message, "error");
   }
 };
 
 // ✅ Fetch Data Bahan Mentah
 const fetchMaterials = async () => {
   try {
-    if (!token) {
-      Swal.fire('Error', 'Token tidak ditemukan!', 'error');
-      return;
-    }
-
-    const response = await fetch('https://sidimasbe.vercel.app/api/bahan', {
-      method: 'GET',
+    const response = await fetch(`${API_URL}/bahan`, {
+      method: "GET",
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
 
-    if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+    if (!response.ok) throw new Error(`Gagal mengambil data bahan mentah: ${response.status}`);
 
     const data = await response.json();
-    if (data.Materials && Array.isArray(data.Materials)) {
-      rawMaterials.value = [...data.Materials];
-    } else {
-      throw new Error("Data bahan mentah tidak dalam format array!");
-    }
+    rawMaterials.value = data.Materials || [];
   } catch (error) {
-    Swal.fire('Error', `Gagal mengambil data bahan mentah: ${error.message}`, 'error');
+    Swal.fire("Error", error.message, "error");
   }
 };
 
-// ✅ Modal Tambah/Edit Bahan Mentah
+// ✅ Detail Bahan Mentah (Bisa Dilihat Semua User)
+const showDetailModal = (material) => {
+  Swal.fire({
+    title: `Detail Bahan Mentah`,
+    html: `
+      <div style="text-align: left; font-size: 14px;">
+        <p><strong>Nama Bahan:</strong> ${material.nama_bahan}</p>
+        <p><strong>Jumlah:</strong> ${material.jumlah} kg</p>
+        <p><strong>Asal Bahan:</strong> ${material.asal_bahan}</p>
+        <p><strong>Kategori:</strong> ${material.kategori}</p>
+        <p><strong>Status:</strong> ${material.status}</p>
+        <p><strong>Supplier:</strong> ${material.supplier?.nama_supplier || "Tidak Diketahui"}</p>
+        <p><strong>Tanggal Masuk:</strong> ${new Date(material.created_at).toLocaleDateString()}</p>
+      </div>
+    `,
+    confirmButtonText: "Tutup",
+  });
+};
 const openEditModal = (material: Material | null = null) => {
   const isEdit = !!material;
   const defaultData = material || {
@@ -164,26 +154,10 @@ const openEditModal = (material: Material | null = null) => {
     }
   });
 };
-const showDetailModal = (material: Material) => {
-  Swal.fire({
-    title: `Detail Bahan Mentah`,
-    html: `
-      <div style="text-align: left; font-size: 14px;">
-        <p><strong>Nama Bahan:</strong> ${material.nama_bahan}</p>
-        <p><strong>Jumlah:</strong> ${material.jumlah} kg</p>
-        <p><strong>Asal Bahan:</strong> ${material.asal_bahan}</p>
-        <p><strong>Kategori:</strong> ${material.kategori}</p>
-        <p><strong>Status:</strong> ${material.status}</p>
-        <p><strong>Supplier:</strong> ${material.supplier.nama_supplier}</p>
-        <p><strong>Tanggal Masuk:</strong> ${new Date(material.created_at).toLocaleDateString()}</p>
-      </div>
-    `,
-    confirmButtonText: 'Tutup',
-  });
-};
+// ✅ Hapus Bahan Mentah (Hanya Admin)
+const deleteMaterial = (material) => {
+  if (!isAdmin) return;
 
-// ✅ Hapus Bahan Mentah
-const deleteMaterial = (material: Material) => {
   Swal.fire({
     title: 'Apakah Anda yakin?',
     text: "Data ini tidak dapat dikembalikan setelah dihapus!",
@@ -193,20 +167,23 @@ const deleteMaterial = (material: Material) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await fetch(`https://sidimasbe.vercel.app/api/dbahan/${material.id_bahan}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` },
+        await fetch(`${API_URL}/dbahan/${material.id_bahan}`, {
+          method: "DELETE",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
         });
-        Swal.fire('Dihapus!', 'Data bahan mentah telah dihapus.', 'success');
+
+        Swal.fire("Dihapus!", "Data bahan mentah telah dihapus.", "success");
         fetchMaterials();
       } catch (error) {
-        Swal.fire('Error', 'Gagal menghapus data bahan mentah', 'error');
+        Swal.fire("Error", "Gagal menghapus data bahan mentah", "error");
       }
     }
   });
 };
 
-// Fetch data saat komponen dimuat
+// ✅ Fetch data saat halaman dimuat
 onMounted(() => {
   fetchSuppliers();
   fetchMaterials();
@@ -217,7 +194,8 @@ onMounted(() => {
   <div class="p-6">
     <h3 class="text-3xl font-bold text-gray-800">Data Bahan Mentah</h3>
 
-    <div class="mt-4">
+    <!-- Tombol Tambah Bahan Mentah (Hanya Admin) -->
+    <div class="mt-4" v-if="isAdmin">
       <button @click="openEditModal(null)" class="px-4 py-2 text-white bg-green-600 hover:bg-green-700 rounded">
         Tambah Bahan Mentah
       </button>
@@ -231,7 +209,7 @@ onMounted(() => {
             <th class="px-6 py-3 text-left text-sm">Jumlah (kg)</th>
             <th class="px-6 py-3 text-left text-sm">Status</th>
             <th class="px-6 py-3 text-left text-sm">Supplier</th>
-            <th class="px-6 py-3 text-left text-sm">Aksi</th> <!-- ✅ Tambah Kolom Aksi -->
+            <th class="px-6 py-3 text-left text-sm">Aksi</th> <!-- ✅ Kolom Aksi -->
           </tr>
         </thead>
         <tbody>
@@ -239,16 +217,17 @@ onMounted(() => {
             <td class="px-6 py-4">{{ material.nama_bahan }}</td>
             <td class="px-6 py-4">{{ material.jumlah }}</td>
             <td class="px-6 py-4">{{ material.status }}</td>
-            <td class="px-6 py-4">{{ material.supplier.nama_supplier }}</td>
+            <td class="px-6 py-4">{{ material.supplier?.nama_supplier || "Tidak Diketahui" }}</td>
             <td class="px-6 py-4 flex space-x-2"> 
-              <!-- ✅ Tombol Aksi -->
+              <!-- ✅ Supplier Hanya Bisa Melihat Detail -->
               <button @click="showDetailModal(material)" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
                 Detail
               </button>
-              <button @click="openEditModal(material)" class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+              <!-- ✅ Admin Bisa Edit & Hapus -->
+              <button v-if="isAdmin" @click="openEditModal(material)" class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                 Edit
               </button>
-              <button @click="deleteMaterial(material)" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+              <button v-if="isAdmin" @click="deleteMaterial(material)" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
                 Hapus
               </button>
             </td>

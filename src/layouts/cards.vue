@@ -6,6 +6,11 @@ import Swal from 'sweetalert2';
 const API_URL = "https://sidimasbe.vercel.app/api";
 const token = localStorage.getItem('token');
 
+// ✅ Ambil role dari user yang login
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+const isAdmin = currentUser?.role === 'admin';
+const isSupplier = currentUser?.role === 'supplier';
+
 // ✅ State untuk menyimpan daftar distribusi dan menu
 const distribusiList = ref([]);
 const menuList = ref([]);
@@ -56,21 +61,41 @@ const fetchMenus = async () => {
   }
 };
 
-// ✅ Tambah Distribusi
+// ✅ Tambah Distribusi (Hanya Admin)
 const createDistribusi = () => {
+  if (!isAdmin) return; // Hanya admin yang bisa menambah distribusi
+
   Swal.fire({
     title: 'Tambah Distribusi',
     html: `
-      <label>Pilih Menu</label>
-      <select id="menu-select" class="swal2-input">
-        ${menuList.value.map(menu => `<option value="${menu.id_menu}">${menu.nama_menu} (Stok: ${menu.jumlah_porsi})</option>`).join('')}
-      </select>
+      <div style="display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; margin: auto;">
+        
+        <!-- Pilih Menu -->
+        <div style="display: flex; flex-direction: column;">
+          <label style="font-weight: 600; margin-bottom: 5px;">Pilih Menu</label>
+          <select id="menu-select" class="swal2-input">
+            ${menuList.value
+              .map(menu => `
+                <option value="${menu.id_menu}" ${menu.jumlah_porsi > 0 ? '' : 'disabled'}>
+                  ${menu.nama_menu} (Stok: ${menu.jumlah_porsi})
+                </option>
+              `)
+              .join('')}
+          </select>
+        </div>
 
-      <label>Jumlah Kirim</label>
-      <input id="jumlah-kirim" type="number" class="swal2-input" placeholder="Masukkan jumlah kirim" />
+        <!-- Input Jumlah Kirim -->
+        <div style="display: flex; flex-direction: column;">
+          <label style="font-weight: 600; margin-bottom: 5px;">Jumlah Kirim</label>
+          <input id="jumlah-kirim" type="number" class="swal2-input" placeholder="Masukkan jumlah kirim" min="1" />
+        </div>
 
-      <label>Alamat Tujuan</label>
-      <input id="alamat-tujuan" type="text" class="swal2-input" placeholder="Masukkan alamat tujuan" />
+        <!-- Input Alamat Tujuan -->
+        <div style="display: flex; flex-direction: column;">
+          <label style="font-weight: 600; margin-bottom: 5px;">Alamat Tujuan</label>
+          <input id="alamat-tujuan" type="text" class="swal2-input" placeholder="Masukkan alamat tujuan" />
+        </div>
+      </div>
     `,
     showCancelButton: true,
     confirmButtonText: 'Tambah',
@@ -79,13 +104,25 @@ const createDistribusi = () => {
       const jumlah_kirim = parseInt((document.getElementById('jumlah-kirim') as HTMLInputElement).value);
       const alamat_tujuan = (document.getElementById('alamat-tujuan') as HTMLInputElement).value;
 
+      const selectedMenu = menuList.value.find(menu => menu.id_menu === id_menu);
+
+      if (!selectedMenu) {
+        Swal.showValidationMessage("Menu tidak ditemukan.");
+        return null;
+      }
+
       if (isNaN(jumlah_kirim) || jumlah_kirim <= 0) {
-        Swal.showValidationMessage("Jumlah kirim harus lebih dari 0");
+        Swal.showValidationMessage("Jumlah kirim harus lebih dari 0.");
+        return null;
+      }
+
+      if (jumlah_kirim > selectedMenu.jumlah_porsi) {
+        Swal.showValidationMessage(`Jumlah kirim tidak boleh lebih dari stok tersedia (${selectedMenu.jumlah_porsi}).`);
         return null;
       }
 
       if (!alamat_tujuan.trim()) {
-        Swal.showValidationMessage("Alamat tujuan tidak boleh kosong");
+        Swal.showValidationMessage("Alamat tujuan tidak boleh kosong.");
         return null;
       }
 
@@ -116,7 +153,7 @@ const createDistribusi = () => {
   });
 };
 
-// ✅ Detail Distribusi
+// ✅ Detail Distribusi (Semua User Bisa Lihat)
 const showDistribusiDetail = (distribusi) => {
   Swal.fire({
     title: `Detail Distribusi`,
@@ -131,8 +168,10 @@ const showDistribusiDetail = (distribusi) => {
   });
 };
 
-// ✅ Hapus Distribusi
+// ✅ Hapus Distribusi (Hanya Admin)
 const deleteDistribusi = async (id_distrib) => {
+  if (!isAdmin) return; // Hanya admin yang bisa menghapus
+
   Swal.fire({
     title: 'Apakah Anda yakin?',
     text: "Data ini akan dihapus secara permanen!",
@@ -173,8 +212,9 @@ onMounted(() => {
   <div class="p-6">
     <h3 class="text-3xl font-bold text-gray-800">Distribusi Menu</h3>
 
-    <!-- Tombol Tambah Distribusi -->
+    <!-- Tombol Tambah Distribusi (Hanya Admin) -->
     <button
+      v-if="isAdmin"
       @click="createDistribusi"
       class="fixed bottom-6 right-6 w-16 h-16 bg-green-500 text-white text-4xl font-bold rounded-full shadow-xl hover:bg-green-600"
       title="Tambah Distribusi"
@@ -204,7 +244,7 @@ onMounted(() => {
               <button @click="showDistribusiDetail(distribusi)" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                 Detail
               </button>
-              <button @click="deleteDistribusi(distribusi.id_distrib)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+              <button v-if="isAdmin" @click="deleteDistribusi(distribusi.id_distrib)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
                 Hapus
               </button>
             </td>

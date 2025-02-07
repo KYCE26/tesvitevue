@@ -43,13 +43,13 @@ const loginUser = async () => {
       console.log("Token dari Login:", data.Token);
 
       // ✅ Notifikasi sukses
-      Swal.fire({ icon: 'success', title: 'Login Berhasil!', text: `Selamat datang, ${data.Username}!` });
+      Swal.fire({ icon: 'success', title: 'Login Berhasil!', text: `Selamat datang!` });
 
       // ✅ Redirect berdasarkan role
       if (data.Role === 'admin') {
         router.push('/dashboard');
       } else if (data.Role === 'supplier') {
-        router.push('/dashboard-supplier');
+        router.push('/dashboard');
       }
     } else {
       throw new Error(data.Message || 'Login gagal. Periksa kembali username dan password Anda.');

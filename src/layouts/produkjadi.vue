@@ -189,7 +189,6 @@ onMounted(() => {
 
     <!-- Tombol Tambah Porsi Menu (Hanya Admin) -->
     <button
-      v-if="isAdmin"
       @click="createPorsiMenu"
       class="fixed bottom-6 right-6 w-16 h-16 bg-green-500 text-white text-4xl font-bold rounded-full shadow-xl hover:bg-green-600"
       title="Tambah Porsi Menu"

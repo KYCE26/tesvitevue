@@ -14,11 +14,73 @@ const isSupplier = currentUser?.role === 'supplier';
 // ✅ State untuk menyimpan daftar menu & daftar porsi yang sudah dibuat
 const menus = ref([]);
 const porsiMenus = ref([]);
+const logBahan = ref([]);
 
+const fetchLogs = async () => {
+  try {
+    const response = await fetch(`${API_URL}/logs`, {
+      method: "GET",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error(`Gagal mengambil data log: ${response.status}`);
+
+    const data = await response.json();
+    logBahan.value = data.data || [];
+  } catch (error) {
+    Swal.fire("Error", error.message, "error");
+  }
+};
+
+const showLogs = async () => {
+  await fetchLogs();
+
+  if (!logBahan.value.length) {
+    Swal.fire("Info", "Tidak ada log bahan yang tersedia.", "info");
+    return;
+  }
+
+  // 🔥 Buat tabel log dalam modal
+  const logHtml = `
+    <div style="max-height: 300px; overflow-y: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="background: #f2f2f2;">
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Nama Bahan</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Tanggal Pemakaian</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Jumlah Digunakan</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Sisa Bahan</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logBahan.value
+            .map(log => `
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.nama_bahan}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.tanggal}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.jumlah_digunakan} kg</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.sisa_bahan} kg</td>
+              </tr>
+            `)
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  Swal.fire({
+    title: "Log Bahan",
+    html: logHtml,
+    width: 800,
+    confirmButtonText: "Tutup",
+  });
+};
 // ✅ Fetch Data Menu
 const fetchMenus = async () => {
   try {
-    console.log("Fetching menu...");
     const response = await fetch(`${API_URL}/menu`, {
       method: "GET",
       headers: {
@@ -31,17 +93,14 @@ const fetchMenus = async () => {
 
     const data = await response.json();
     menus.value = data.data || [];
-    console.log("Menu berhasil dimuat:", menus.value);
   } catch (error) {
     Swal.fire("Error", error.message, "error");
-    console.error("Error fetchMenus:", error);
   }
 };
 
 // ✅ Fetch Data Porsi Menu
 const fetchPorsiMenus = async () => {
   try {
-    console.log("Fetching porsi menu...");
     const response = await fetch(`${API_URL}/menu`, {
       method: "GET",
       headers: {
@@ -54,10 +113,8 @@ const fetchPorsiMenus = async () => {
 
     const data = await response.json();
     porsiMenus.value = data.data || [];
-    console.log("Porsi menu berhasil dimuat:", porsiMenus.value);
   } catch (error) {
     Swal.fire("Error", error.message, "error");
-    console.error("Error fetchPorsiMenus:", error);
   }
 };
 
@@ -185,19 +242,29 @@ onMounted(() => {
 
 <template>
   <div class="p-6">
-    <h3 class="text-3xl font-bold text-gray-800">Manajemen Porsi Menu</h3>
+    <h3 class="text-3xl font-bold text-gray-800">Manajemen Porsi Menu
+
+    </h3>
 
     <!-- Tombol Tambah Porsi Menu (Hanya Admin) -->
     <button
+      v-if="isAdmin"
       @click="createPorsiMenu"
       class="fixed bottom-6 right-6 w-16 h-16 bg-green-500 text-white text-4xl font-bold rounded-full shadow-xl hover:bg-green-600"
       title="Tambah Porsi Menu"
     >
+    
       +
     </button>
-
+    <button
+        @click="showLogs"
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Log Bahan
+      </button>
     <!-- Daftar Porsi Menu -->
     <div class="mt-8">
+      
       <table class="min-w-full bg-white border">
         <thead class="bg-gray-200">
           <tr>
@@ -221,6 +288,7 @@ onMounted(() => {
           </tr>
         </tbody>
       </table>
+      
     </div>
   </div>
 </template>

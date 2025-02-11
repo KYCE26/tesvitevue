@@ -14,7 +14,70 @@ const isSupplier = currentUser?.role === 'supplier';
 // ✅ State untuk menyimpan daftar bahan mentah & supplier
 const rawMaterials = ref([]);
 const suppliersList = ref([]);
+const logBahan = ref([]);
 
+const fetchLogs = async () => {
+  try {
+    const response = await fetch(`${API_URL}/logs`, {
+      method: "GET",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error(`Gagal mengambil data log: ${response.status}`);
+
+    const data = await response.json();
+    logBahan.value = data.data || [];
+  } catch (error) {
+    Swal.fire("Error", error.message, "error");
+  }
+};
+
+const showLogs = async () => {
+  await fetchLogs();
+
+  if (!logBahan.value.length) {
+    Swal.fire("Info", "Tidak ada log bahan yang tersedia.", "info");
+    return;
+  }
+
+  // 🔥 Buat tabel log dalam modal
+  const logHtml = `
+    <div style="max-height: 300px; overflow-y: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="background: #f2f2f2;">
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Nama Bahan</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Tanggal Pemakaian</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Jumlah Digunakan</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Sisa Bahan</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${logBahan.value
+            .map(log => `
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.nama_bahan}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.tanggal}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.jumlah_digunakan} kg</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${log.sisa_bahan} kg</td>
+              </tr>
+            `)
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  Swal.fire({
+    title: "Log Bahan",
+    html: logHtml,
+    width: 800,
+    confirmButtonText: "Tutup",
+  });
+};
 // ✅ Fetch Data Supplier
 const fetchSuppliers = async () => {
   try {
@@ -55,6 +118,65 @@ const fetchMaterials = async () => {
   }
 };
 
+const addStockForSupplier = () => {
+  // 🔥 Filter hanya bahan milik supplier yang login
+  const supplierMaterials = rawMaterials.value.filter(material => material.id_supplier === user.id_supplier);
+
+  if (supplierMaterials.length === 0) {
+    Swal.fire("Error", "Anda belum memiliki bahan untuk menambah stok.", "error");
+    return;
+  }
+
+  const materialOptions = supplierMaterials.map(m =>
+    `<option value="${m.id_bahan}">${m.nama_bahan} (Stok: ${m.jumlah} kg)</option>`
+  ).join('');
+
+  Swal.fire({
+    title: 'Tambah Stok Bahan',
+    html: `
+      <label>Pilih Bahan</label>
+      <select id="id_bahan" class="swal2-input">
+        ${materialOptions}
+      </select>
+
+      <label>Jumlah Tambahan</label>
+      <input id="jumlah" type="number" class="swal2-input" placeholder="Masukkan jumlah (kg)" min="1" />
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Tambah Stok',
+    preConfirm: () => {
+      const id_bahan = parseInt((document.getElementById('id_bahan') as HTMLSelectElement).value);
+      const jumlah = parseInt((document.getElementById('jumlah') as HTMLInputElement).value);
+
+      if (isNaN(jumlah) || jumlah <= 0) {
+        Swal.showValidationMessage("Jumlah stok harus lebih dari 0.");
+        return null;
+      }
+
+      return { id_bahan, jumlah };
+    }
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${API_URL}/addstok`, {
+          method: "POST",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(result.value),
+        });
+
+        if (!response.ok) throw new Error(`Gagal menambahkan stok: ${response.status}`);
+
+        Swal.fire("Berhasil", "Stok bahan berhasil ditambahkan!", "success");
+        fetchMaterials();
+      } catch (error) {
+        Swal.fire("Error", error.message, "error");
+      }
+    }
+  });
+};
 // ✅ Detail Bahan Mentah (Bisa Dilihat Semua User)
 const showDetailModal = (material) => {
   Swal.fire({
@@ -199,9 +321,16 @@ onMounted(() => {
       <button @click="openEditModal(null)" class="px-4 py-2 text-white bg-green-600 hover:bg-green-700 rounded">
         Tambah Bahan Mentah
       </button>
+      
     </div>
 
     <div class="mt-8 overflow-x-auto">
+      <button
+        @click="showLogs"
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Log Bahan
+      </button>
       <table class="min-w-full bg-white border">
         <thead class="bg-gray-200">
           <tr>
@@ -234,6 +363,13 @@ onMounted(() => {
           </tr>
         </tbody>
       </table>
+      <div v-if="isSupplier" class="fixed bottom-6 left-6">
+      <button @click="addStockForSupplier"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition">
+        + Tambah Stok
+      </button>
     </div>
+    </div>
+    
   </div>
 </template>

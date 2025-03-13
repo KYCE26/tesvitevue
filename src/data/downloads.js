@@ -4,7 +4,7 @@ const downloads = [
         icon: "images/logo-chrome.svg",
         title: "Add to Chrome",
         subTitle: "Minimum version 62",
-        link: "#",
+        link: "",
     },
     {
         id: 2,
